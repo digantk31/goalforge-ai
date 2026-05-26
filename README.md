@@ -19,14 +19,19 @@
 
 ## 💻 Local Development Setup
 
+First, clone the repository and navigate into the directory:
+```bash
+git clone https://github.com/digantk31/goalforge-ai.git
+cd goalforge-ai
+```
+
 ### Option 1: Using Docker Compose (Recommended)
 The easiest way to boot the entire stack (Frontend, Backend, and MongoDB) locally.
 
-1. Clone the repository and copy the env file:
+1. Copy the template env file and add your `GEMINI_API_KEY`:
    ```bash
    cp .env.example .env
    ```
-2. Add your Gemini API Key inside `.env`.
 3. Boot the stack:
    ```bash
    docker-compose up --build
