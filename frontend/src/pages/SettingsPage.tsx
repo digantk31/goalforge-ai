@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Sun, Moon, Eye, EyeOff, Key, Database, ExternalLink } from 'lucide-react'
+import { Eye, EyeOff, Key, Database, ExternalLink } from 'lucide-react'
 import { Card, CardHeader, CardContent } from '@/components/ui/Card'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
-import { useTheme } from '@/hooks/useTheme'
 
 export function SettingsPage() {
-  const { theme, toggleTheme } = useTheme()
   const [showGemini, setShowGemini] = useState(false)
   const [showMongo, setShowMongo] = useState(false)
 
@@ -23,32 +21,6 @@ export function SettingsPage() {
       </div>
 
       <div className="space-y-6">
-        <Card className="glass border-zinc-800/50">
-          <CardHeader>
-            <h3 className="text-lg font-medium">Appearance</h3>
-            <p className="text-sm text-zinc-400">Customize how GoalForge looks on your device.</p>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between p-4 rounded-lg bg-zinc-900/50 border border-zinc-800">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-zinc-800 rounded-md">
-                  {theme === 'dark' ? <Moon className="w-5 h-5 text-brand-400" /> : <Sun className="w-5 h-5 text-amber-400" />}
-                </div>
-                <div>
-                  <p className="font-medium">Theme</p>
-                  <p className="text-xs text-zinc-500 capitalize">{theme} mode active</p>
-                </div>
-              </div>
-              <button 
-                onClick={toggleTheme}
-                className="relative inline-flex h-6 w-11 items-center rounded-full bg-zinc-700 transition-colors focus:outline-none"
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-            </div>
-          </CardContent>
-        </Card>
-
         <Card className="glass border-zinc-800/50">
           <CardHeader>
             <div className="flex items-center justify-between">

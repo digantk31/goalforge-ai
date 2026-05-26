@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import { useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Circle, Loader2, AlertCircle, TerminalSquare } from 'lucide-react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { GlowEffect } from '@/components/ui/GlowEffect'
 import { cn } from '@/lib/cn'
 
@@ -16,7 +16,6 @@ interface Step {
 export function WorkflowRunPage() {
   const { goalId } = useParams<{ goalId: string }>()
   const [steps, setSteps] = useState<Step[]>([])
-  const [currentStep, setCurrentStep] = useState<string | null>(null)
   const [logs, setLogs] = useState<string[]>([])
   const [finalReport, setFinalReport] = useState<string | null>(null)
   const logsEndRef = useRef<HTMLDivElement>(null)
@@ -38,9 +37,6 @@ export function WorkflowRunPage() {
             }
             return [...prev, { id: data.id || data.step, name: data.step, status: data.status || 'pending' }]
           })
-          if (data.status === 'running') {
-            setCurrentStep(data.id || data.step)
-          }
           if ((data.step === 'Generate Report' || data.name === 'Generate Report') && data.status === 'completed') {
             setFinalReport('# Final Report\\n\\nThe workflow has completed successfully and generated the final results.')
           }
@@ -99,10 +95,10 @@ export function WorkflowRunPage() {
           <GlowEffect color="rgba(139, 92, 246, 0.15)" active={true}>
             <Card className="glass border-zinc-800/50 h-full bg-zinc-900/40 backdrop-blur-md">
               <CardHeader className="border-b border-zinc-800/50 pb-4">
-                <CardTitle className="text-lg font-medium flex items-center gap-2">
+                <h3 className="text-lg font-medium flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" />
                   Live Timeline
-                </CardTitle>
+                </h3>
               </CardHeader>
               <CardContent className="pt-6 relative">
                 {steps.length === 0 ? (

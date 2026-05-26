@@ -1,12 +1,10 @@
-import { Menu, Sun, Moon, Bell, User } from 'lucide-react'
+import { Menu, Bell, User } from 'lucide-react'
 import { useUIStore } from '@/stores/uiStore'
-import { useTheme } from '@/hooks/useTheme'
 import { useLocation } from 'react-router-dom'
 import { NAV_ITEMS } from '@/lib/constants'
 
 export function Header() {
   const { toggleSidebar } = useUIStore()
-  const { theme, toggleTheme } = useTheme()
   const location = useLocation()
 
   const currentNav = NAV_ITEMS.find((item) => item.path === location.pathname)
@@ -25,14 +23,6 @@ export function Header() {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          onClick={toggleTheme}
-          className="p-2 text-zinc-400 hover:text-zinc-100 rounded-full hover:bg-zinc-800/50 transition-colors"
-          aria-label="Toggle theme"
-        >
-          {theme === 'dark' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
-        </button>
-        
         <button className="relative p-2 text-zinc-400 hover:text-zinc-100 rounded-full hover:bg-zinc-800/50 transition-colors">
           <Bell className="w-5 h-5" />
           <span className="absolute top-1.5 right-2 w-2 h-2 bg-brand-500 rounded-full border border-zinc-950"></span>

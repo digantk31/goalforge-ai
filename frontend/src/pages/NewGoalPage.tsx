@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Sparkles, X } from 'lucide-react'
@@ -23,6 +23,25 @@ export function NewGoalPage() {
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingState, setLoadingState] = useState(0)
+
+  const loadingMessages = [
+    "Analyzing goal...",
+    "Estimating time to completion...",
+    "Output estimated in ~45s...",
+    "Starting autonomous agents..."
+  ]
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval>
+    if (isLoading) {
+      setLoadingState(0)
+      interval = setInterval(() => {
+        setLoadingState((prev) => (prev < loadingMessages.length - 1 ? prev + 1 : prev))
+      }, 800)
+    }
+    return () => clearInterval(interval)
+  }, [isLoading])
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' || e.key === ',') {
@@ -129,7 +148,9 @@ export function NewGoalPage() {
               loading={isLoading}
               onClick={handleForgeGoal}
             >
-              Forge Goal
+              <span className="min-w-[200px] inline-block">
+                {isLoading ? loadingMessages[loadingState] : "Forge Goal"}
+              </span>
             </Button>
           </CardContent>
         </Card>

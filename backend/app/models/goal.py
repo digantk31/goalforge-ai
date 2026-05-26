@@ -1,13 +1,7 @@
-from pydantic import BaseModel, Field
-from typing import Optional, Any
-from bson import ObjectId
+from pydantic import BeforeValidator, BaseModel, Field
+from typing import Annotated, Optional, Any
 
-class PyObjectId(str):
-    """Custom type to handle MongoDB ObjectIds in Pydantic."""
-    @classmethod
-    def __get_pydantic_core_schema__(cls, _source_type: Any, _handler: Any) -> Any:
-        from pydantic_core import core_schema
-        return core_schema.str_schema()
+PyObjectId = Annotated[str, BeforeValidator(str)]
 
 class GoalBase(BaseModel):
     title: str = Field(..., description="The title of the goal")

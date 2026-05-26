@@ -29,9 +29,14 @@ cd goalforge-ai
 The easiest way to boot the entire stack (Frontend, Backend, and MongoDB) locally.
 
 1. Copy the template env file and add your `GEMINI_API_KEY`:
-   ```bash
-   cp .env.example .env
-   ```
+   - **Mac/Linux**:
+     ```bash
+     cp .env.example .env
+     ```
+   - **Windows**:
+     ```cmd
+     copy .env.example .env
+     ```
 3. Boot the stack:
    ```bash
    docker-compose up --build
