@@ -5,15 +5,17 @@ export type StepType = 'research' | 'analysis' | 'generation' | 'code' | 'valida
 
 export interface Goal {
   id: string
-  goal_text: string
-  priority: Priority
+  title: string
+  description: string | null
   status: GoalStatus
-  tags: string[]
-  step_count: number
-  completed_steps: number
-  latest_run_id: string | null
-  created_at: string
-  updated_at: string
+  // Extended fields — not yet returned by backend, kept optional for forward compatibility
+  priority?: Priority
+  tags?: string[]
+  step_count?: number
+  completed_steps?: number
+  latest_run_id?: string | null
+  created_at?: string
+  updated_at?: string
 }
 
 export interface StepOutput {

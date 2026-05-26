@@ -1,16 +1,7 @@
 import json
 from typing import List
 from app.integrations.gemini.client import GeminiClient
-try:
-    from app.models.workflow import StepCreate
-except ImportError:
-    # Dummy definition if app.models.workflow doesn't exist yet
-    from pydantic import BaseModel
-    class StepCreate(BaseModel):
-        title: str
-        description: str
-        step_type: str
-        order_index: int = 0
+from app.models.workflow import StepCreate
 
 class WorkflowPlanner:
     """Plans a workflow by breaking down a goal into steps."""

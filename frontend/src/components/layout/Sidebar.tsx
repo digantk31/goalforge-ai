@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Diamond, LayoutDashboard, Sparkles, History, Settings, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import { useUIStore } from '@/stores/uiStore'
@@ -89,6 +89,3 @@ export function Sidebar() {
     </motion.aside>
   )
 }
-
-// Needed to wrap AnimatePresence correctly
-import { AnimatePresence } from 'framer-motion'

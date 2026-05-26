@@ -7,14 +7,14 @@ from app.core.exceptions import GoalNotFoundError
 
 router = APIRouter()
 
-@router.post("/", response_model=GoalResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=GoalResponse, response_model_by_alias=False, status_code=status.HTTP_201_CREATED)
 async def create_goal(
     goal: GoalCreate,
     service: GoalService = Depends(get_goal_service)
 ):
     return await service.create_goal(goal)
 
-@router.get("/", response_model=List[GoalResponse])
+@router.get("/", response_model=List[GoalResponse], response_model_by_alias=False)
 async def list_goals(
     skip: int = 0,
     limit: int = 100,
@@ -22,7 +22,7 @@ async def list_goals(
 ):
     return await service.list_goals(skip=skip, limit=limit)
 
-@router.get("/{goal_id}", response_model=GoalResponse)
+@router.get("/{goal_id}", response_model=GoalResponse, response_model_by_alias=False)
 async def get_goal(
     goal_id: str,
     service: GoalService = Depends(get_goal_service)
@@ -31,3 +31,14 @@ async def get_goal(
         return await service.get_goal(goal_id)
     except GoalNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+@router.delete("/{goal_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_goal(
+    goal_id: str,
+    service: GoalService = Depends(get_goal_service)
+):
+    try:
+        await service.delete_goal(goal_id)
+    except GoalNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+

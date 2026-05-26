@@ -3,7 +3,7 @@ from bson import ObjectId
 from app.db.collections import WORKFLOWS_COLLECTION, STEPS_COLLECTION
 from app.models.workflow import StepStatus, WorkflowStatus
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 class WorkflowRepository:
     def __init__(self, db: AsyncIOMotorDatabase):
@@ -14,7 +14,7 @@ class WorkflowRepository:
         workflow = {
             "goal_id": goal_id,
             "status": WorkflowStatus.PENDING.value,
-            "started_at": datetime.utcnow()
+            "started_at": datetime.now(timezone.utc)
         }
         result = await self.workflow_collection.insert_one(workflow)
         return await self.get_workflow_run(str(result.inserted_id))
@@ -44,9 +44,9 @@ class WorkflowRepository:
             update_data["result"] = result_text
             
         if status in [StepStatus.COMPLETED, StepStatus.FAILED]:
-            update_data["completed_at"] = datetime.utcnow()
+            update_data["completed_at"] = datetime.now(timezone.utc)
         elif status == StepStatus.IN_PROGRESS:
-            update_data["started_at"] = datetime.utcnow()
+            update_data["started_at"] = datetime.now(timezone.utc)
             
         await self.steps_collection.update_one(
             {"_id": ObjectId(step_id)},

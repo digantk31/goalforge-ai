@@ -31,6 +31,13 @@ class StepResponse(StepBase):
     class Config:
         populate_by_name = True
 
+class StepCreate(BaseModel):
+    """Model for creating a new step in a workflow plan."""
+    title: str
+    description: str
+    step_type: str = "action"
+    order_index: int = 0
+
 class WorkflowRunResponse(BaseModel):
     id: PyObjectId = Field(alias="_id")
     goal_id: str

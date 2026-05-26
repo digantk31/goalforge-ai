@@ -19,5 +19,15 @@ class GoalUpdate(BaseModel):
 class GoalResponse(GoalBase):
     id: PyObjectId = Field(alias="_id")
 
-    class Config:
-        populate_by_name = True
+    model_config = {
+        "populate_by_name": True,
+        "json_schema_serialization_defaults_required": True,
+    }
+
+    def model_dump(self, **kwargs):
+        kwargs.setdefault("by_alias", False)
+        return super().model_dump(**kwargs)
+
+    def model_dump_json(self, **kwargs):
+        kwargs.setdefault("by_alias", False)
+        return super().model_dump_json(**kwargs)

@@ -6,6 +6,7 @@ import { CheckCircle2, Circle, Loader2, AlertCircle, TerminalSquare } from 'luci
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { GlowEffect } from '@/components/ui/GlowEffect'
 import { cn } from '@/lib/cn'
+import { API_URL } from '@/lib/constants'
 
 interface Step {
   id: string
@@ -23,13 +24,14 @@ export function WorkflowRunPage() {
   useEffect(() => {
     if (!goalId) return
 
-    const sse = new EventSource(`http://localhost:8000/api/v1/workflows/${goalId}/stream`)
+    const sse = new EventSource(`${API_URL}/api/v1/workflows/${goalId}/stream`)
 
     sse.onmessage = (e) => {
       try {
         const data = JSON.parse(e.data)
         
-        if (data.step) {
+        // Update step timeline
+        if (data.step && data.step !== 'Generate Report') {
           setSteps(prev => {
             const existing = prev.find(s => s.id === (data.id || data.step))
             if (existing) {
@@ -37,14 +39,16 @@ export function WorkflowRunPage() {
             }
             return [...prev, { id: data.id || data.step, name: data.step, status: data.status || 'pending' }]
           })
-          if ((data.step === 'Generate Report' || data.name === 'Generate Report') && data.status === 'completed') {
-            setFinalReport('# Final Report\\n\\nThe workflow has completed successfully and generated the final results.')
-          }
+        }
+
+        // Set final report from backend
+        if (data.report) {
+          setFinalReport(data.report)
         }
         
-        if (data.log || typeof data === 'string') {
-          const logText = data.log || (typeof data === 'string' ? data : JSON.stringify(data))
-          setLogs(prev => [...prev, logText])
+        // Append to terminal logs
+        if (data.log) {
+          setLogs(prev => [...prev, data.log])
         }
 
       } catch (err) {
