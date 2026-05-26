@@ -1,0 +1,3 @@
+GOALS_COLLECTION = "goals"
+WORKFLOWS_COLLECTION = "workflow_runs"
+STEPS_COLLECTION = "steps"
