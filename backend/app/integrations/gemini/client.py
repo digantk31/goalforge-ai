@@ -22,7 +22,7 @@ class GeminiClient:
 
     def __init__(self):
         self.client = genai.Client(api_key=API_KEY)
-        self.model_id = "gemini-2.0-flash"
+        self.model_id = "gemini-2.5-flash"
 
     def _retry_on_rate_limit(self, func, *args, **kwargs):
         """Retry a function call with exponential backoff on 429 errors."""
@@ -73,3 +73,18 @@ class GeminiClient:
             ),
         ).text
 
+    def generate_report(self, goal: str, step_results: list) -> str:
+        """Generates a final summary report from all completed step results."""
+        context = "\n".join([f"- **{item['step']}**: {item['result'][:300]}" for item in step_results])
+        prompt = (
+            f"Generate a comprehensive, well-formatted markdown report for this completed workflow.\n\n"
+            f"## Goal\n{goal}\n\n"
+            f"## Completed Steps\n{context}\n\n"
+            f"Write a professional report with: an executive summary, key findings for each step, "
+            f"and actionable recommendations. Use markdown headers, bullet points, and bold text."
+        )
+        return self._retry_on_rate_limit(
+            self.client.models.generate_content,
+            model=self.model_id,
+            contents=prompt,
+        ).text
