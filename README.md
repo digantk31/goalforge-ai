@@ -14,6 +14,12 @@
 </p>
 
 <p align="center">
+  <a href="https://goalforge-ai.vercel.app"><strong>🔗 Live Frontend Demo (Vercel)</strong></a> &nbsp;•&nbsp; 
+  <a href="https://goalforge-backend-xbwc534m6w-uc.a.run.app/docs"><strong>⚙️ Backend API Docs (Cloud Run)</strong></a> &nbsp;•&nbsp;
+  <a href="https://github.com/digantk31/goalforge-ai"><strong>💻 GitHub Codebase</strong></a>
+</p>
+
+<p align="center">
   Give GoalForge a high-level goal. The Gemini-powered engine autonomously decomposes it into actionable steps, executes them in real-time, and generates a comprehensive AI report — all streamed live to a premium dark-mode dashboard.
 </p>
 
