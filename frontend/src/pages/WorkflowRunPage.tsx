@@ -17,7 +17,7 @@ interface Step {
 export function WorkflowRunPage() {
   const { goalId } = useParams<{ goalId: string }>()
   const [steps, setSteps] = useState<Step[]>([])
-  const [logs, setLogs] = useState<string[]>([])
+  const [logs, setLogs] = useState<{ text: string; time: string }[]>([])
   const [finalReport, setFinalReport] = useState<string | null>(null)
   const [showReport, setShowReport] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
@@ -49,7 +49,8 @@ export function WorkflowRunPage() {
         }
         
         if (data.log) {
-          setLogs(prev => [...prev, data.log])
+          const now = new Date().toLocaleTimeString([], { hour12: false })
+          setLogs(prev => [...prev, { text: data.log, time: now }])
         }
 
       } catch (err) {
@@ -82,28 +83,30 @@ export function WorkflowRunPage() {
   }
 
   const completedCount = steps.filter(s => s.status === 'completed').length
+  const progressPercent = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0
 
   return (
-    <div className="max-w-7xl mx-auto py-8 px-4 h-[calc(100vh-8rem)]">
-      <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+    <div className="max-w-7xl mx-auto py-6 px-4">
+      {/* Header */}
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-zinc-100 flex items-center gap-3">
             <TerminalSquare className="w-8 h-8 text-brand-500" />
             Workflow Execution
           </h1>
-          <p className="text-zinc-400 mt-2 text-sm font-mono">Goal ID: {goalId}</p>
+          <p className="text-zinc-500 mt-1.5 text-sm font-mono">ID: {goalId?.slice(0, 12)}...</p>
         </div>
-        {/* Toggle Button */}
         {finalReport && (
           <motion.button
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
+            whileTap={{ scale: 0.97 }}
             onClick={() => setShowReport(!showReport)}
             className={cn(
-              "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 border",
+              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border cursor-pointer",
               showReport 
                 ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
-                : "bg-brand-500/15 border-brand-500/30 text-brand-300 hover:bg-brand-500/25"
+                : "bg-brand-500/15 border-brand-500/30 text-brand-300 hover:bg-brand-500/25 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
             )}
           >
             {showReport ? (
@@ -115,41 +118,54 @@ export function WorkflowRunPage() {
         )}
       </div>
 
-      {/* Completion Banner */}
+      {/* Progress Bar */}
       <AnimatePresence>
-        {isComplete && (
+        {steps.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, height: 0, marginBottom: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginBottom: 24 }}
-            className="rounded-xl border border-emerald-500/20 bg-gradient-to-r from-emerald-500/10 via-emerald-500/5 to-transparent p-4 flex items-center gap-4"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            className="mb-6"
           >
-            <div className="p-2 bg-emerald-500/10 rounded-lg">
-              <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+            <div className="flex items-center justify-between text-xs text-zinc-500 mb-2">
+              <span>{isComplete ? '✅ Workflow Complete' : `⚡ Executing ${completedCount}/${steps.length} steps...`}</span>
+              <span className="tabular-nums font-mono">{progressPercent}%</span>
             </div>
-            <div>
-              <p className="text-emerald-300 font-medium">Workflow Complete</p>
-              <p className="text-emerald-400/60 text-sm">{completedCount} of {steps.length} steps completed successfully</p>
+            <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+              <motion.div
+                className={cn(
+                  "h-full rounded-full",
+                  isComplete ? "bg-gradient-to-r from-emerald-500 to-emerald-400" : "bg-gradient-to-r from-brand-600 to-brand-400"
+                )}
+                initial={{ width: 0 }}
+                animate={{ width: `${progressPercent}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              />
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full min-h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" style={{ minHeight: 'calc(100vh - 16rem)' }}>
         {/* Left Column: Timeline */}
-        <div className="lg:col-span-5 h-full overflow-y-auto pr-4 custom-scrollbar">
-          <GlowEffect color="rgba(139, 92, 246, 0.15)" active={true}>
-            <Card className="glass border-zinc-800/50 h-full bg-zinc-900/40 backdrop-blur-md">
+        <div className="lg:col-span-5 overflow-y-auto pr-2 custom-scrollbar" style={{ maxHeight: 'calc(100vh - 16rem)' }}>
+          <GlowEffect color="rgba(139, 92, 246, 0.12)" active={!isComplete}>
+            <Card className="glass border-zinc-800/50 bg-zinc-900/40 backdrop-blur-md">
               <CardHeader className="border-b border-zinc-800/50 pb-4">
                 <h3 className="text-lg font-medium flex items-center gap-2">
-                  <div className={cn("w-2 h-2 rounded-full", isComplete ? "bg-emerald-500" : "bg-brand-500 animate-pulse")} />
+                  <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", isComplete ? "bg-emerald-500" : "bg-brand-500 animate-pulse")} />
                   Live Timeline
+                  {steps.length > 0 && (
+                    <span className="ml-auto text-xs text-zinc-500 font-normal tabular-nums">{completedCount}/{steps.length}</span>
+                  )}
                 </h3>
               </CardHeader>
-              <CardContent className="pt-6 relative">
+              <CardContent className="pt-6 relative pb-2">
                 {steps.length === 0 ? (
                   <div className="text-zinc-500 text-center py-12 flex flex-col items-center gap-4">
-                    <Loader2 className="w-8 h-8 animate-spin text-zinc-700" />
-                    <p>Waiting for workflow to start...</p>
+                    <div className="p-4 bg-zinc-800/30 rounded-2xl">
+                      <Loader2 className="w-8 h-8 animate-spin text-zinc-600" />
+                    </div>
+                    <p className="text-sm">Waiting for workflow to start...</p>
                   </div>
                 ) : (
                   <div className="space-y-0">
@@ -159,29 +175,33 @@ export function WorkflowRunPage() {
                           key={step.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="relative pl-8 pb-8 last:pb-0"
+                          transition={{ delay: index * 0.08, type: 'spring', stiffness: 300, damping: 25 }}
+                          className="relative pl-8 pb-6 last:pb-0"
                         >
+                          {/* Connecting Line */}
                           {index !== steps.length - 1 && (
-                            <div className="absolute left-[11px] top-8 bottom-[-8px] w-0.5 bg-gradient-to-b from-zinc-700 to-transparent" />
+                            <div className={cn(
+                              "absolute left-[11px] top-8 bottom-[-4px] w-0.5",
+                              step.status === 'completed' ? "bg-gradient-to-b from-emerald-500/40 to-emerald-500/10" : "bg-gradient-to-b from-zinc-700 to-transparent"
+                            )} />
                           )}
                           
-                          <div className="absolute left-[-2px] top-1 bg-zinc-900 rounded-full">
+                          <div className="absolute left-[-2px] top-1 bg-zinc-900 rounded-full p-0.5">
                             {getStepIcon(step.status)}
                           </div>
 
                           <div className={cn(
-                            "p-4 rounded-lg border transition-all duration-300 relative overflow-hidden",
-                            step.status === 'running' ? "bg-brand-500/10 border-brand-500/30 shadow-[0_0_15px_rgba(139,92,246,0.15)]" :
-                            step.status === 'completed' ? "bg-emerald-500/5 border-emerald-500/20" :
-                            step.status === 'failed' ? "bg-red-500/10 border-red-500/20" :
+                            "p-4 rounded-xl border transition-all duration-500 relative overflow-hidden",
+                            step.status === 'running' ? "bg-brand-500/8 border-brand-500/25 shadow-[0_0_20px_rgba(139,92,246,0.12)]" :
+                            step.status === 'completed' ? "bg-emerald-500/5 border-emerald-500/15" :
+                            step.status === 'failed' ? "bg-red-500/8 border-red-500/20" :
                             "bg-zinc-800/30 border-zinc-700/50"
                           )}>
                             {step.status === 'running' && (
-                              <div className="absolute top-0 left-0 right-0 h-[30%] bg-gradient-to-b from-transparent via-brand-500/10 to-brand-400/40 blur-sm animate-scan pointer-events-none" />
+                              <div className="absolute top-0 left-0 right-0 h-[30%] bg-gradient-to-b from-transparent via-brand-500/8 to-brand-400/20 blur-sm animate-scan pointer-events-none" />
                             )}
                             <h3 className={cn(
-                              "font-medium text-lg relative z-10",
+                              "font-medium text-[15px] relative z-10 leading-snug",
                               step.status === 'running' ? "text-brand-300" :
                               step.status === 'completed' ? "text-emerald-400" :
                               step.status === 'failed' ? "text-red-400" :
@@ -189,7 +209,13 @@ export function WorkflowRunPage() {
                             )}>
                               {step.name}
                             </h3>
-                            <p className="text-sm text-zinc-500 mt-1 capitalize">{step.status}</p>
+                            <p className={cn(
+                              "text-xs mt-1.5 capitalize font-medium",
+                              step.status === 'running' ? "text-brand-400/60" :
+                              step.status === 'completed' ? "text-emerald-500/50" :
+                              step.status === 'failed' ? "text-red-400/50" :
+                              "text-zinc-500/60"
+                            )}>{step.status}</p>
                           </div>
                         </motion.div>
                       ))}
@@ -202,19 +228,20 @@ export function WorkflowRunPage() {
         </div>
 
         {/* Right Column: Terminal Logs / Final Report */}
-        <div className="lg:col-span-7 h-full">
+        <div className="lg:col-span-7" style={{ maxHeight: 'calc(100vh - 16rem)' }}>
           <AnimatePresence mode="wait">
             {showReport && finalReport ? (
               <motion.div
                 key="report"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0, y: 16, scale: 0.99 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8, scale: 0.99 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className="h-full flex flex-col"
+                style={{ maxHeight: 'calc(100vh - 16rem)' }}
               >
                 {/* Report Header */}
-                <div className="rounded-t-xl border border-b-0 border-zinc-800 bg-gradient-to-r from-brand-500/10 via-zinc-900 to-zinc-900 p-5 flex items-center gap-4">
+                <div className="rounded-t-xl border border-b-0 border-zinc-800 bg-gradient-to-r from-brand-500/10 via-zinc-900/95 to-zinc-900/95 p-5 flex items-center gap-4 backdrop-blur-sm">
                   <div className="p-2.5 bg-brand-500/15 rounded-xl border border-brand-500/20">
                     <Sparkles className="w-5 h-5 text-brand-400" />
                   </div>
@@ -236,46 +263,52 @@ export function WorkflowRunPage() {
             ) : (
               <motion.div
                 key="terminal"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, y: -8 }}
                 className="h-full"
+                style={{ maxHeight: 'calc(100vh - 16rem)' }}
               >
-                <Card className="h-full bg-[#0a0a0a] border-zinc-800/50 shadow-2xl flex flex-col relative overflow-hidden group">
+                <Card className="h-full bg-[#0a0a0a] border-zinc-800/50 shadow-2xl flex flex-col relative overflow-hidden group terminal-glow">
                   {/* Terminal Header */}
                   <div className="flex items-center px-4 py-3 bg-zinc-900/80 border-b border-zinc-800/50">
                     <div className="flex gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500/80" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-500/80" />
-                      <div className="w-3 h-3 rounded-full bg-green-500/80" />
+                      <div className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500/70 hover:bg-yellow-500 transition-colors" />
+                      <div className="w-3 h-3 rounded-full bg-green-500/70 hover:bg-green-500 transition-colors" />
                     </div>
                     <div className="mx-auto text-xs font-mono text-zinc-500 flex items-center gap-2">
                       <TerminalSquare className="w-3 h-3" />
-                      worker-node-1
+                      goalforge-worker
                     </div>
+                    {!isComplete && logs.length > 0 && (
+                      <div className="w-2 h-2 bg-brand-500 rounded-full animate-pulse" />
+                    )}
                   </div>
 
                   {/* Terminal Output */}
-                  <CardContent className="flex-1 p-6 font-mono text-sm overflow-y-auto custom-scrollbar relative">
-                    <div className="absolute inset-0 bg-gradient-to-b from-brand-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+                  <CardContent className="flex-1 p-5 font-mono text-[13px] overflow-y-auto custom-scrollbar relative leading-relaxed">
+                    <div className="absolute inset-0 bg-gradient-to-b from-brand-500/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
                     
                     {logs.length === 0 ? (
                       <div className="text-zinc-600 flex items-center gap-2">
-                        <span className="animate-pulse">_</span> Waiting for logs...
+                        <span className="inline-block w-2 h-4 bg-zinc-600 animate-[typing-cursor_1s_infinite]" />
+                        <span>Waiting for connection...</span>
                       </div>
                     ) : (
-                      <div className="space-y-1">
+                      <div className="space-y-0.5">
                         {logs.map((log, i) => (
                           <motion.div 
                             key={i}
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="text-zinc-300 break-words"
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="text-zinc-300 break-words py-0.5 hover:bg-zinc-800/30 px-1 -mx-1 rounded transition-colors"
                           >
-                            <span className="text-zinc-600 mr-4 select-none">
-                              {new Date().toLocaleTimeString([], { hour12: false })}
+                            <span className="text-zinc-600 mr-3 select-none text-xs">
+                              {log.time}
                             </span>
-                            {log}
+                            {log.text}
                           </motion.div>
                         ))}
                         <div ref={logsEndRef} />
