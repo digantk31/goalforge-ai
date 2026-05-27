@@ -10,10 +10,12 @@ import { PRIORITY_COLORS } from '@/lib/constants'
 import { api } from '@/lib/api'
 
 const suggestions = [
-  { text: 'Build a landing page', icon: Rocket },
-  { text: 'Research market trends', icon: Lightbulb },
-  { text: 'Write technical docs', icon: BookOpen },
-  { text: 'Plan product launch', icon: Megaphone },
+  { text: 'Create a 5-day workout plan for beginners', icon: Rocket },
+  { text: 'Design a go-to-market strategy for an AI startup', icon: Megaphone },
+  { text: 'Build a weekly meal prep plan under $50', icon: Lightbulb },
+  { text: 'Write a technical blog post about microservices', icon: BookOpen },
+  { text: 'Plan a 7-day trip to Japan on a budget', icon: Rocket },
+  { text: 'Create a study schedule for learning Python in 30 days', icon: Lightbulb },
 ]
 
 export function NewGoalPage() {
@@ -63,7 +65,7 @@ export function NewGoalPage() {
       setIsLoading(true)
       const goal = await api.createGoal(goalText, priority)
       await api.startWorkflow(goal.id)
-      navigate(`/run/${goal.id}`)
+      navigate(`/run/${goal.id}`, { state: { goalDescription: goalText } })
     } catch (error) {
       console.error('Failed to forge goal:', error)
     } finally {

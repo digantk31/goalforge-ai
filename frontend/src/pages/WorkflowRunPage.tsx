@@ -1,12 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { useParams } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, Circle, Loader2, AlertCircle, TerminalSquare, FileText, Sparkles } from 'lucide-react'
+import { CheckCircle2, Circle, Loader2, AlertCircle, TerminalSquare, FileText, Sparkles, Copy, Check, RotateCcw, Download } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { GlowEffect } from '@/components/ui/GlowEffect'
 import { cn } from '@/lib/cn'
 import { API_URL } from '@/lib/constants'
+import { api } from '@/lib/api'
 
 interface Step {
   id: string
@@ -16,12 +17,28 @@ interface Step {
 
 export function WorkflowRunPage() {
   const { goalId } = useParams<{ goalId: string }>()
+  const location = useLocation()
   const [steps, setSteps] = useState<Step[]>([])
   const [logs, setLogs] = useState<{ text: string; time: string }[]>([])
   const [finalReport, setFinalReport] = useState<string | null>(null)
   const [showReport, setShowReport] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
+  const [goalTitle, setGoalTitle] = useState<string>('')
+  const [copied, setCopied] = useState(false)
+  const [isRerunning, setIsRerunning] = useState(false)
   const logsEndRef = useRef<HTMLDivElement>(null)
+
+  // Load goal title from router state or fetch from API
+  useEffect(() => {
+    const state = location.state as { goalDescription?: string } | null
+    if (state?.goalDescription) {
+      setGoalTitle(state.goalDescription)
+    } else if (goalId) {
+      api.getGoal(goalId)
+        .then((goal) => setGoalTitle(goal.description || goal.title || ''))
+        .catch(() => {})
+    }
+  }, [goalId, location.state])
 
   useEffect(() => {
     if (!goalId) return
@@ -82,6 +99,48 @@ export function WorkflowRunPage() {
     }
   }
 
+  const handleCopyReport = async () => {
+    if (!finalReport) return
+    try {
+      await navigator.clipboard.writeText(finalReport)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      console.error('Failed to copy report')
+    }
+  }
+
+  const handleExportMarkdown = () => {
+    if (!finalReport) return
+    const blob = new Blob([finalReport], { type: 'text/markdown;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `goalforge-report-${goalId?.slice(0, 8) || 'unknown'}.md`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  const handleRerun = async () => {
+    if (!goalId || isRerunning) return
+    setIsRerunning(true)
+    // Reset state
+    setSteps([])
+    setLogs([])
+    setFinalReport(null)
+    setShowReport(false)
+    setIsComplete(false)
+    try {
+      await api.startWorkflow(goalId)
+    } catch (err) {
+      console.error('Failed to re-run workflow:', err)
+    } finally {
+      setIsRerunning(false)
+    }
+  }
+
   const completedCount = steps.filter(s => s.status === 'completed').length
   const progressPercent = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0
 
@@ -89,33 +148,89 @@ export function WorkflowRunPage() {
     <div className="max-w-7xl mx-auto py-6 px-4">
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-        <div>
+        <div className="min-w-0 flex-1">
           <h1 className="text-3xl font-bold tracking-tight text-zinc-100 flex items-center gap-3">
-            <TerminalSquare className="w-8 h-8 text-brand-500" />
+            <TerminalSquare className="w-8 h-8 text-brand-500 shrink-0" />
             Workflow Execution
           </h1>
-          <p className="text-zinc-500 mt-1.5 text-sm font-mono">ID: {goalId?.slice(0, 12)}...</p>
+          {goalTitle ? (
+            <p className="text-zinc-400 mt-1.5 text-sm truncate max-w-xl">
+              <span className="text-zinc-500">Goal:</span> {goalTitle}
+            </p>
+          ) : (
+            <p className="text-zinc-500 mt-1.5 text-sm font-mono">ID: {goalId?.slice(0, 12)}...</p>
+          )}
         </div>
-        {finalReport && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={() => setShowReport(!showReport)}
-            className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border cursor-pointer",
-              showReport 
-                ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
-                : "bg-brand-500/15 border-brand-500/30 text-brand-300 hover:bg-brand-500/25 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
-            )}
-          >
-            {showReport ? (
-              <><TerminalSquare className="w-4 h-4" /> View Logs</>
-            ) : (
-              <><FileText className="w-4 h-4" /> View Report</>
-            )}
-          </motion.button>
-        )}
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          {/* Re-run Button */}
+          {isComplete && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleRerun}
+              disabled={isRerunning}
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border cursor-pointer bg-zinc-800/80 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RotateCcw className={cn("w-4 h-4", isRerunning && "animate-spin")} />
+              {isRerunning ? 'Starting...' : 'Re-run'}
+            </motion.button>
+          )}
+          {/* Export Markdown Button */}
+          {finalReport && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleExportMarkdown}
+              className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border cursor-pointer bg-zinc-800/80 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+            >
+              <Download className="w-4 h-4" /> Export .md
+            </motion.button>
+          )}
+          {/* Copy Report Button */}
+          {finalReport && (
+            <motion.button
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleCopyReport}
+              className={cn(
+                "flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border cursor-pointer",
+                copied
+                  ? "bg-emerald-500/15 border-emerald-500/30 text-emerald-400"
+                  : "bg-zinc-800/80 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700"
+              )}
+            >
+              {copied ? (
+                <><Check className="w-4 h-4" /> Copied!</>
+              ) : (
+                <><Copy className="w-4 h-4" /> Copy Report</>
+              )}
+            </motion.button>
+          )}
+          {/* Toggle Button */}
+          {finalReport && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowReport(!showReport)}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 border cursor-pointer",
+                showReport 
+                  ? "bg-zinc-800 border-zinc-700 text-zinc-300 hover:bg-zinc-700"
+                  : "bg-brand-500/15 border-brand-500/30 text-brand-300 hover:bg-brand-500/25 shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+              )}
+            >
+              {showReport ? (
+                <><TerminalSquare className="w-4 h-4" /> View Logs</>
+              ) : (
+                <><FileText className="w-4 h-4" /> View Report</>
+              )}
+            </motion.button>
+          )}
+        </div>
       </div>
 
       {/* Progress Bar */}
@@ -175,7 +290,7 @@ export function WorkflowRunPage() {
                           key={step.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.08, type: 'spring', stiffness: 300, damping: 25 }}
+                          transition={{ delay: index * 0.08, type: 'spring' as const, stiffness: 300, damping: 25 }}
                           className="relative pl-8 pb-6 last:pb-0"
                         >
                           {/* Connecting Line */}
@@ -236,7 +351,7 @@ export function WorkflowRunPage() {
                 initial={{ opacity: 0, y: 16, scale: 0.99 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -8, scale: 0.99 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                transition={{ type: 'spring' as const, stiffness: 300, damping: 30 }}
                 className="h-full flex flex-col"
                 style={{ maxHeight: 'calc(100vh - 16rem)' }}
               >
