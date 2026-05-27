@@ -56,26 +56,16 @@ export function DashboardPage() {
       })
   }, [])
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-[50vh] flex-col gap-3">
-        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-        <p className="text-sm text-zinc-500 animate-pulse">Loading dashboard...</p>
-      </div>
-    )
-  }
-
-  // Dynamic stats from real data
+  // Dynamic stats from real data (must be before any early returns — Rules of Hooks)
   const totalGoals = goals.length
   const completedGoals = goals.filter(g => getGoalStatus(g) === 'completed').length
   const activeWorkflows = goals.filter(g => getGoalStatus(g) === 'running').length
   const successRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0
 
-  // Generate chart data from goals (use real timestamps or simulate activity)
   const chartData = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    const today = new Date().getDay() // 0=Sun
-    const seed = totalGoals * 7 + 42 // deterministic seed
+    const today = new Date().getDay()
+    const seed = totalGoals * 7 + 42
     return days.map((name, i) => {
       const isToday = (i + 1) % 7 === today
       const isPast = (i + 1) % 7 < today || today === 0
@@ -86,6 +76,15 @@ export function DashboardPage() {
       }
     })
   }, [totalGoals])
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-[50vh] flex-col gap-3">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+        <p className="text-sm text-zinc-500 animate-pulse">Loading dashboard...</p>
+      </div>
+    )
+  }
 
   return (
     <motion.div 
