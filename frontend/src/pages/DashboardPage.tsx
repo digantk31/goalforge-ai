@@ -213,7 +213,7 @@ export function DashboardPage() {
           <div className="text-center">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand-500/10 text-brand-400 border border-brand-500/20 text-xs font-semibold mb-2">
               <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-ping" />
-              Recommended for Judges
+              Featured Presets
             </div>
             <h3 className="text-lg font-semibold text-zinc-300">Quick-Start Demo Presets</h3>
             <p className="text-xs text-zinc-500 mt-1">One-click deployment to stream live agent execution, tools activity, and report synthesis.</p>
