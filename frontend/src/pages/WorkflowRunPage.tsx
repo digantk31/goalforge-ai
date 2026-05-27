@@ -15,6 +15,46 @@ interface Step {
   status: 'pending' | 'running' | 'completed' | 'failed'
 }
 
+const FAKE_TOOL_LOGS_TEMPLATES: Record<string, string[]> = {
+  "Analyze Requirements": [
+    "🔍 [Agent Engine] Analyzing user goal and mapping architectural dependencies...",
+    "📦 [Tool Call] invoking db_schema_inspector(model=\"goal\")",
+    "💾 [Tool Response] Retrieved 3 collections from MongoDB Cluster (12ms)",
+    "⚙️ [AI Core] Establishing reasoning path with temperature=0.2..."
+  ],
+  "Research & Gather Data": [
+    "🌐 [Tool Call] invoking google_search(query=\"current trends and competitor landscape\")",
+    "📡 [Tool Response] Found 8 high-authority sources in search index",
+    "📥 [Tool Call] invoking web_scraper_api(urls=[\"competitor_analysis_data\"])",
+    "📊 [Data Engine] Normalizing raw textual nodes & embedding into semantic vector space..."
+  ],
+  "Plan Implementation": [
+    "📋 [Planner Agent] Translating constraints into optimized sequence steps...",
+    "🧠 [AI Core] Prompting Gemini Flash with task-decomposition template...",
+    "⚡ [Optimizer] Evaluated 3 execution graphs, selected Graph #1 (confidence: 97%)",
+    "💾 [Storage] Persisting step timeline configuration to Database..."
+  ],
+  "Execute Core Tasks": [
+    "🛠️ [Worker Pool] Deploying active execution runners...",
+    "💻 [Tool Call] invoking code_sandbox_executor(language=\"python\")",
+    "📟 [Sandbox Output] Execution finished with exit code 0",
+    "🔄 [Self-Correction] Verifying output compliance with target objectives..."
+  ],
+  "Review & Finalize": [
+    "🔎 [QA Auditor] Performing semantic evaluation and structural linting...",
+    "📈 [Stats Engine] Aggregating metric results for dashboard telemetry...",
+    "🎨 [Format Agent] Normalizing output markdown styling to Linear/Vercel standard...",
+    "🚀 [Workflow Service] Final verification successful. Ready for synthesis."
+  ]
+}
+
+const getGenericFakeLogs = (stepName: string) => [
+  `🤖 [Agent Engine] Activating node: "${stepName}"...`,
+  `🔍 [Tool Call] invoking semantic_memory_lookup(query="${stepName.toLowerCase()}")`,
+  `⚡ [AI Reasoning] Generating intermediate solution draft using Gemini...`,
+  `💾 [Context] Appending step checkpoints to current execution stack...`
+]
+
 export function WorkflowRunPage() {
   const { goalId } = useParams<{ goalId: string }>()
   const location = useLocation()
@@ -28,6 +68,41 @@ export function WorkflowRunPage() {
   const [isRerunning, setIsRerunning] = useState(false)
   const logsEndRef = useRef<HTMLDivElement>(null)
 
+  // Warm-up initial logs on mount or rerun
+  const runInitialLogs = () => {
+    const initialLogs = [
+      "🚀 [GoalForge Worker] Initializing agent environment...",
+      "📡 [System] Connecting to MongoDB Atlas cluster... Connected (32ms)",
+      "🧠 [Core] Loading Gemini 2.5 Flash execution model...",
+      "🔒 [Security] API Credential verification: SUCCESS",
+      "⚡ [System] Awaiting workflow activation command..."
+    ]
+    
+    initialLogs.forEach((logText, index) => {
+      setTimeout(() => {
+        const now = new Date().toLocaleTimeString([], { hour12: false })
+        setLogs(prev => {
+          if (prev.some(l => l.text === logText)) return prev
+          return [...prev, { text: logText, time: now }]
+        })
+      }, (index + 1) * 200)
+    })
+  }
+
+  // Helper to stream fake logs when step runs
+  const queueFakeLogs = (stepName: string) => {
+    const templates = FAKE_TOOL_LOGS_TEMPLATES[stepName] || getGenericFakeLogs(stepName)
+    templates.forEach((logText, index) => {
+      setTimeout(() => {
+        const now = new Date().toLocaleTimeString([], { hour12: false })
+        setLogs(prev => {
+          if (prev.some(l => l.text === logText)) return prev
+          return [...prev, { text: logText, time: now }]
+        })
+      }, (index + 1) * 450 + Math.random() * 200)
+    })
+  }
+
   // Load goal title from router state or fetch from API
   useEffect(() => {
     const state = location.state as { goalDescription?: string } | null
@@ -40,6 +115,11 @@ export function WorkflowRunPage() {
     }
   }, [goalId, location.state])
 
+  // Run initial logs on load
+  useEffect(() => {
+    runInitialLogs()
+  }, [])
+
   useEffect(() => {
     if (!goalId) return
 
@@ -50,6 +130,11 @@ export function WorkflowRunPage() {
         const data = JSON.parse(e.data)
         
         if (data.step && data.step !== 'Generate Report') {
+          // If a step changes to running, stream the fake sub-logs
+          if (data.status === 'running') {
+            queueFakeLogs(data.step)
+          }
+
           setSteps(prev => {
             const existing = prev.find(s => s.id === (data.id || data.step))
             if (existing) {
@@ -132,6 +217,7 @@ export function WorkflowRunPage() {
     setFinalReport(null)
     setShowReport(false)
     setIsComplete(false)
+    runInitialLogs()
     try {
       await api.startWorkflow(goalId)
     } catch (err) {
@@ -273,7 +359,7 @@ export function WorkflowRunPage() {
             <Card className="glass border-zinc-800/50 bg-zinc-900/40 backdrop-blur-md">
               <CardHeader className="border-b border-zinc-800/50 pb-4">
                 <h3 className="text-lg font-medium flex items-center gap-2">
-                  <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", isComplete ? "bg-emerald-500" : "bg-brand-500 animate-pulse")} />
+                  <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", isComplete ? "bg-emerald-500 animate-pulse" : "bg-brand-500 animate-pulse")} />
                   Live Timeline
                   {steps.length > 0 && (
                     <span className="ml-auto text-xs text-zinc-500 font-normal tabular-nums">{completedCount}/{steps.length}</span>
@@ -282,11 +368,34 @@ export function WorkflowRunPage() {
               </CardHeader>
               <CardContent className="pt-6 relative pb-2">
                 {steps.length === 0 ? (
+                  /* Premium AI Thinking / Planning Effect */
                   <div className="text-zinc-500 text-center py-12 flex flex-col items-center gap-4">
-                    <div className="p-4 bg-zinc-800/30 rounded-2xl">
-                      <Loader2 className="w-8 h-8 animate-spin text-zinc-600" />
+                    <div className="relative flex items-center justify-center w-24 h-24">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 15, ease: "linear" }}
+                        className="absolute w-24 h-24 border-2 border-dashed border-brand-500/20 rounded-full"
+                      />
+                      <motion.div
+                        animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ repeat: Infinity, duration: 3, ease: "easeInOut" }}
+                        className="absolute w-16 h-16 bg-brand-500 rounded-full blur-xl"
+                      />
+                      <div className="relative p-4 bg-brand-500/10 border border-brand-500/30 rounded-2xl">
+                        <Sparkles className="w-8 h-8 text-brand-400 animate-pulse" />
+                      </div>
                     </div>
-                    <p className="text-sm">Waiting for workflow to start...</p>
+                    <div className="space-y-1.5 max-w-xs mx-auto">
+                      <p className="text-sm font-semibold text-zinc-300 flex items-center justify-center gap-1.5">
+                        Gemini is reasoning
+                        <span className="flex gap-0.5">
+                          <span className="w-1 h-1 bg-zinc-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                          <span className="w-1 h-1 bg-zinc-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                          <span className="w-1 h-1 bg-zinc-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        </span>
+                      </p>
+                      <p className="text-xs text-zinc-500">Decomposing goal into optimized workflow checkpoints...</p>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-0">
@@ -301,43 +410,79 @@ export function WorkflowRunPage() {
                         >
                           {/* Connecting Line */}
                           {index !== steps.length - 1 && (
-                            <div className={cn(
-                              "absolute left-[11px] top-8 bottom-[-4px] w-0.5",
-                              step.status === 'completed' ? "bg-gradient-to-b from-emerald-500/40 to-emerald-500/10" : "bg-gradient-to-b from-zinc-700 to-transparent"
-                            )} />
+                            <div className="absolute left-[11px] top-8 bottom-[-4px] w-0.5 overflow-hidden bg-zinc-800">
+                              {step.status === 'completed' && (
+                                <motion.div 
+                                  className="w-full h-full bg-gradient-to-b from-emerald-400 to-emerald-600 origin-top"
+                                  initial={{ scaleY: 0 }}
+                                  animate={{ scaleY: 1 }}
+                                  transition={{ duration: 0.6 }}
+                                />
+                              )}
+                              {step.status === 'running' && (
+                                <motion.div 
+                                  className="w-full h-full bg-gradient-to-b from-brand-500 to-transparent origin-top"
+                                  initial={{ scaleY: 0 }}
+                                  animate={{ scaleY: [0, 1, 1], translateY: ["0%", "0%", "100%"] }}
+                                  transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                                />
+                              )}
+                            </div>
                           )}
                           
                           <div className="absolute left-[-2px] top-1 bg-zinc-900 rounded-full p-0.5">
                             {getStepIcon(step.status)}
                           </div>
 
-                          <div className={cn(
-                            "p-4 rounded-xl border transition-all duration-500 relative overflow-hidden",
-                            step.status === 'running' ? "bg-brand-500/8 border-brand-500/25 shadow-[0_0_20px_rgba(139,92,246,0.12)]" :
-                            step.status === 'completed' ? "bg-emerald-500/5 border-emerald-500/15" :
-                            step.status === 'failed' ? "bg-red-500/8 border-red-500/20" :
-                            "bg-zinc-800/30 border-zinc-700/50"
-                          )}>
+                          <motion.div
+                            animate={step.status === 'running' ? {
+                              scale: [1, 1.015, 1],
+                              boxShadow: [
+                                "0 0 0px rgba(139,92,246,0)",
+                                "0 0 20px rgba(139,92,246,0.15)",
+                                "0 0 0px rgba(139,92,246,0)"
+                              ]
+                            } : {}}
+                            transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                            className={cn(
+                              "p-4 rounded-xl border transition-all duration-500 relative overflow-hidden",
+                              step.status === 'running' ? "bg-brand-500/8 border-brand-500/25" :
+                              step.status === 'completed' ? "bg-emerald-500/5 border-emerald-500/15" :
+                              step.status === 'failed' ? "bg-red-500/8 border-red-500/20" :
+                              "bg-zinc-800/30 border-zinc-700/50"
+                            )}
+                          >
                             {step.status === 'running' && (
                               <div className="absolute top-0 left-0 right-0 h-[30%] bg-gradient-to-b from-transparent via-brand-500/8 to-brand-400/20 blur-sm animate-scan pointer-events-none" />
                             )}
                             <h3 className={cn(
                               "font-medium text-[15px] relative z-10 leading-snug",
-                              step.status === 'running' ? "text-brand-300" :
+                              step.status === 'running' ? "text-brand-300 font-semibold" :
                               step.status === 'completed' ? "text-emerald-400" :
                               step.status === 'failed' ? "text-red-400" :
                               "text-zinc-400"
                             )}>
                               {step.name}
                             </h3>
-                            <p className={cn(
-                              "text-xs mt-1.5 capitalize font-medium",
-                              step.status === 'running' ? "text-brand-400/60" :
-                              step.status === 'completed' ? "text-emerald-500/50" :
-                              step.status === 'failed' ? "text-red-400/50" :
-                              "text-zinc-500/60"
-                            )}>{step.status}</p>
-                          </div>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <span className={cn(
+                                "text-xs font-semibold uppercase tracking-wider",
+                                step.status === 'running' ? "text-brand-400" :
+                                step.status === 'completed' ? "text-emerald-500" :
+                                step.status === 'failed' ? "text-red-400" :
+                                "text-zinc-500"
+                              )}>
+                                {step.status}
+                              </span>
+                              {step.status === 'running' && (
+                                <span className="flex gap-0.5">
+                                  <span className="w-1 h-1 bg-brand-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                  <span className="w-1 h-1 bg-brand-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                  <span className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                                </span>
+                              )}
+                            </div>
+                          </motion.div>
                         </motion.div>
                       ))}
                     </AnimatePresence>

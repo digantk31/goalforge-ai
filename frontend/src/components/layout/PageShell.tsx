@@ -6,6 +6,7 @@ import { Header } from './Header'
 import { MobileNav } from './MobileNav'
 import { ToastContainer } from '@/components/ui/Toast'
 import { useUIStore } from '@/stores/uiStore'
+import { cn } from '@/lib/cn'
 
 const pageVariants = {
   initial: { opacity: 0, y: 12, filter: 'blur(4px)' },
@@ -64,15 +65,12 @@ export function PageShell() {
       <Sidebar />
       <MobileNav />
 
-      <motion.div
-        layout
-        className="flex flex-col flex-1 min-w-0 relative z-10"
-        animate={{
-          marginLeft: typeof window !== 'undefined' && window.innerWidth >= 768
-            ? (sidebarCollapsed ? 72 : 240)
-            : 0
-        }}
-        transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+      <div
+        className={cn(
+          "flex flex-col flex-1 min-w-0 relative z-10 transition-[margin-left] duration-300 ease-out min-h-screen",
+          sidebarCollapsed ? "md:ml-[72px]" : "md:ml-[240px]",
+          "ml-0"
+        )}
       >
         <Header />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 scroll-smooth custom-scrollbar">
@@ -89,7 +87,7 @@ export function PageShell() {
             </motion.div>
           </AnimatePresence>
         </main>
-      </motion.div>
+      </div>
 
       <ToastContainer />
     </div>

@@ -19,6 +19,30 @@
 
 ---
 
+## 📷 Screenshots & Visual Walkthrough
+
+Here is a visual walk-through of the GoalForge AI experience, featuring a Vercel-style glassmorphic design system and high-fidelity real-time telemetry.
+
+### 1. Premium Dark-First Dashboard
+The central command hub displaying active/completed workflows, live activity charts, and intelligent presets.
+<p align="center">
+  <img src="docs/images/dashboard.png" width="850" alt="GoalForge Dashboard" />
+</p>
+
+### 2. Autonomous Workflow Planner
+Decompose high-level plans with customizable priorities, tags, and intelligent presets.
+<p align="center">
+  <img src="docs/images/new_goal.png" width="850" alt="GoalForge Goal Planner" />
+</p>
+
+### 3. Real-Time Telemetry & Report Synthesis
+Live event stream showing step execution alongside macOS-style fake tool terminal logs.
+<p align="center">
+  <img src="docs/images/workflow_execution.png" width="850" alt="GoalForge Execution" />
+</p>
+
+---
+
 ## 🎯 What is GoalForge AI?
 
 GoalForge AI is an **autonomous agentic workflow platform** that transforms any natural language goal into a structured, multi-step execution pipeline. It demonstrates the power of Google's Gemini AI for:
