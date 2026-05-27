@@ -5,6 +5,7 @@ import { NewGoalPage } from '@/pages/NewGoalPage'
 import { HistoryPage } from '@/pages/HistoryPage'
 import { SettingsPage } from '@/pages/SettingsPage'
 import { WorkflowRunPage } from '@/pages/WorkflowRunPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export const router = createBrowserRouter([
   {
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: <SettingsPage />,
+      },
+      {
+        path: '*',
+        element: <NotFoundPage />,
       },
     ],
   },

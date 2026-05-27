@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import ReactMarkdown from 'react-markdown'
-import { useParams, useLocation } from 'react-router-dom'
+import { useParams, useLocation, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, Circle, Loader2, AlertCircle, TerminalSquare, FileText, Sparkles, Copy, Check, RotateCcw, Download } from 'lucide-react'
+import { CheckCircle2, Circle, Loader2, AlertCircle, TerminalSquare, FileText, Sparkles, Copy, Check, RotateCcw, Download, ArrowLeft } from 'lucide-react'
 import { Card, CardContent, CardHeader } from '@/components/ui/Card'
 import { GlowEffect } from '@/components/ui/GlowEffect'
 import { cn } from '@/lib/cn'
@@ -146,6 +146,12 @@ export function WorkflowRunPage() {
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
+      {/* Back Navigation */}
+      <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-zinc-500 hover:text-zinc-300 transition-colors mb-4 group">
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
+        Back to Dashboard
+      </Link>
+
       {/* Header */}
       <div className="mb-6 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div className="min-w-0 flex-1">

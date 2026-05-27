@@ -75,7 +75,7 @@ export function SettingsPage() {
               <p className="text-sm text-zinc-400">Version 0.1.0-alpha</p>
               <p className="text-xs text-zinc-500 mt-1">Built for the Google Cloud Rapid Agent Hackathon.</p>
             </div>
-            <a href="https://github.com" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg transition-colors text-sm font-medium">
+            <a href="https://github.com/digantk31/goalforge-ai" target="_blank" rel="noreferrer" className="flex items-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 rounded-lg transition-colors text-sm font-medium">
               <ExternalLink className="w-4 h-4" /> View Source
             </a>
           </CardContent>

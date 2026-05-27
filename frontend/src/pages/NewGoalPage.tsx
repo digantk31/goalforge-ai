@@ -5,6 +5,7 @@ import { Sparkles, X, Rocket, Lightbulb, BookOpen, Megaphone } from 'lucide-reac
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { GlowEffect } from '@/components/ui/GlowEffect'
+import { showToast } from '@/components/ui/Toast'
 import { cn } from '@/lib/cn'
 import { PRIORITY_COLORS } from '@/lib/constants'
 import { api } from '@/lib/api'
@@ -65,8 +66,11 @@ export function NewGoalPage() {
       setIsLoading(true)
       const goal = await api.createGoal(goalText, priority)
       await api.startWorkflow(goal.id)
+      showToast('Workflow started successfully!', 'success')
       navigate(`/run/${goal.id}`, { state: { goalDescription: goalText } })
-    } catch (error) {
+    } catch (error: any) {
+      const msg = error?.response?.data?.detail || error?.message || 'Failed to create goal'
+      showToast(msg, 'error')
       console.error('Failed to forge goal:', error)
     } finally {
       setIsLoading(false)

@@ -7,10 +7,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - MONGODB_URI=mongodb://mongo:27017/goalforge
+      - MONGODB_URI=${MONGODB_URI}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-    depends_on:
-      - mongo
     networks:
       - goalforge-network
 

@@ -22,8 +22,11 @@ steps:
       - 'managed'
       - '--allow-unauthenticated'
       - '--set-env-vars'
-      - 'PROJECT_NAME=GoalForge API'
-      # Important: Set GEMINI_API_KEY and MONGODB_URI in Cloud Run Secrets or environment securely
+      - 'PROJECT_NAME=GoalForge API,GEMINI_API_KEY=${_GEMINI_API_KEY},MONGODB_URI=${_MONGODB_URI}'
+
+substitutions:
+  _GEMINI_API_KEY: ''
+  _MONGODB_URI: ''
 
 images:
   - 'gcr.io/$PROJECT_ID/goalforge-backend'

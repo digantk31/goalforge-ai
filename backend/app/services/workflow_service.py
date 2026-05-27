@@ -3,11 +3,13 @@ import json
 import logging
 import random
 import traceback
+from bson import ObjectId
 from app.engine.planner import WorkflowPlanner
 from app.engine.context import ExecutionContext
 from app.db.repositories.workflow_repo import WorkflowRepository
 from app.models.workflow import StepStatus
 from app.integrations.gemini.client import GeminiClient
+# pyrefly: ignore [missing-import]
 from motor.motor_asyncio import AsyncIOMotorDatabase
 
 logger = logging.getLogger(__name__)
@@ -32,8 +34,8 @@ class WorkflowService:
     """
 
     def __init__(self):
-        self.planner = WorkflowPlanner()
         self.gemini = GeminiClient()
+        self.planner = WorkflowPlanner(client=self.gemini)
 
     async def stream_workflow_events(self, run_id: str):
         queue = workflow_events.get(run_id)
@@ -141,6 +143,12 @@ class WorkflowService:
                 "log": "📄 Workflow execution finished.",
                 "report": report_md
             })
+
+            # Update goal status to completed
+            await db["goals"].update_one(
+                {"_id": ObjectId(goal_id)},
+                {"$set": {"status": "completed"}}
+            )
 
         except Exception as e:
             error_msg = str(e)

@@ -1,3 +1,4 @@
+# pyrefly: ignore [missing-import]
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson import ObjectId
 from app.db.collections import GOALS_COLLECTION
@@ -20,7 +21,7 @@ class GoalRepository:
         return await self.collection.find_one({"_id": ObjectId(goal_id)})
 
     async def list_goals(self, skip: int = 0, limit: int = 100) -> List[dict]:
-        cursor = self.collection.find().skip(skip).limit(limit)
+        cursor = self.collection.find().sort("_id", -1).skip(skip).limit(limit)
         return await cursor.to_list(length=limit)
 
     async def update_goal(self, goal_id: str, goal_update: GoalUpdate) -> Optional[dict]:

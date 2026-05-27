@@ -1,13 +1,16 @@
 import json
+import logging
 from typing import List
 from app.integrations.gemini.client import GeminiClient
 from app.models.workflow import StepCreate
 
+logger = logging.getLogger(__name__)
+
 class WorkflowPlanner:
     """Plans a workflow by breaking down a goal into steps."""
 
-    def __init__(self):
-        self.client = GeminiClient()
+    def __init__(self, client: GeminiClient = None):
+        self.client = client or GeminiClient()
 
     def plan_workflow(self, goal: str) -> List[StepCreate]:
         """Generates a list of Step models from a goal."""
@@ -27,5 +30,5 @@ class WorkflowPlanner:
                 )
             return steps
         except json.JSONDecodeError:
-            print("Failed to decode JSON plan from Gemini.")
+            logger.error("Failed to decode JSON plan from Gemini.")
             return []

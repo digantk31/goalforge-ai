@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { Target, Zap, CheckCircle, Clock, Sparkles, Activity, Loader2, ArrowUpRight } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -72,19 +72,20 @@ export function DashboardPage() {
   const successRate = totalGoals > 0 ? Math.round((completedGoals / totalGoals) * 100) : 0
 
   // Generate chart data from goals (use real timestamps or simulate activity)
-  const chartData = (() => {
+  const chartData = useMemo(() => {
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
     const today = new Date().getDay() // 0=Sun
+    const seed = totalGoals * 7 + 42 // deterministic seed
     return days.map((name, i) => {
       const isToday = (i + 1) % 7 === today
       const isPast = (i + 1) % 7 < today || today === 0
-      const base = totalGoals > 0 ? Math.floor(Math.random() * 3000 + 1000) : 0
+      const pseudoRandom = ((seed * (i + 1) * 2654435761) >>> 0) % 3000 + 1000
       return {
         name,
-        goals: isToday ? totalGoals * 1800 : isPast ? base : 0
+        goals: isToday ? totalGoals * 1800 : isPast ? (totalGoals > 0 ? pseudoRandom : 0) : 0
       }
     })
-  })()
+  }, [totalGoals])
 
   return (
     <motion.div 
