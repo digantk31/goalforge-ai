@@ -21,24 +21,48 @@
 
 ## 📷 Screenshots & Visual Walkthrough
 
-Here is a visual walk-through of the GoalForge AI experience, featuring a Vercel-style glassmorphic design system and high-fidelity real-time telemetry.
+Here is a visual tour of the live GoalForge AI experience, featuring a Vercel-style glassmorphic design system, high-fidelity real-time telemetry, and a JetBrains Mono terminal log:
 
 ### 1. Premium Dark-First Dashboard
-The central command hub displaying active/completed workflows, live activity charts, and intelligent presets.
+The central command hub displaying active/completed workflows, live activity charts, and **One-Click Demo Presets** for easy judge execution.
 <p align="center">
   <img src="docs/images/dashboard.png" width="850" alt="GoalForge Dashboard" />
 </p>
 
-### 2. Autonomous Workflow Planner
-Decompose high-level plans with customizable priorities, tags, and intelligent presets.
+### 2. Autonomous Goal Planner
+Decompose any natural language goal with customizable priorities, tags, and quick-suggestions.
 <p align="center">
   <img src="docs/images/new_goal.png" width="850" alt="GoalForge Goal Planner" />
 </p>
 
-### 3. Real-Time Telemetry & Report Synthesis
-Live event stream showing step execution alongside macOS-style fake tool terminal logs.
+### 3. Real-Time Telemetry & Bouncing Statuses (Running)
+Live Event Stream (SSE) showing running agent states in purple, blinking dots, and **Fake Tool Execution Logs** (invoking Google Search, MongoDB MCP connection, etc.).
 <p align="center">
-  <img src="docs/images/workflow_execution.png" width="850" alt="GoalForge Execution" />
+  <img src="docs/images/workflow_running.png" width="850" alt="GoalForge Workflow Running" />
+</p>
+
+### 4. Fully Completed Checklist (100% Complete)
+The entire workflow timeline successfully completed and filled in emerald, with progress bar at 100%.
+<p align="center">
+  <img src="docs/images/workflow_completed.png" width="850" alt="GoalForge Workflow Completed" />
+</p>
+
+### 5. AI-Generated Report Synthesis
+A pristine view showing final report compilation in markdown format, with options to re-run, export, or copy contents.
+<p align="center">
+  <img src="docs/images/workflow_execution.png" width="850" alt="GoalForge Execution Report" />
+</p>
+
+### 6. Interactive History Log
+Review all past autonomous workflows with clean search filters and priority indicators.
+<p align="center">
+  <img src="docs/images/history.png" width="850" alt="GoalForge History Log" />
+</p>
+
+### 7. Secure API Settings Hub
+Connect, configure, and manage your credentials under TLS security, complete with toggleable input masks.
+<p align="center">
+  <img src="docs/images/settings.png" width="850" alt="GoalForge Settings" />
 </p>
 
 ---
