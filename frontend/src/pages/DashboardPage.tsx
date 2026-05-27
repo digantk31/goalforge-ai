@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Target, Zap, CheckCircle, Clock, Sparkles, Activity, Loader2, ArrowUpRight, Rocket, ShieldAlert, Search, TrendingUp } from 'lucide-react'
+import { Target, Zap, CheckCircle, Clock, Sparkles, Activity, Loader2, ArrowUpRight, Rocket, ShieldAlert, Search } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -43,32 +43,25 @@ function getTimeAgo(dateStr: string | undefined): string {
 
 const PRESETS = [
   {
-    title: "Generate Market Strategy",
-    description: "Market analysis and entry strategy for a B2B SaaS platform in developer tools.",
+    title: "AI Market Analysis",
+    description: "Generate a comprehensive market entry strategy and analysis for a B2B developer tools SaaS platform.",
     prompt: "Generate a comprehensive market analysis and entry strategy for a B2B SaaS platform in the automated developer tools space, identifying key competitors and pricing models.",
     icon: Rocket,
     color: "from-purple-500/20 to-indigo-500/20 border-purple-500/30 text-purple-400"
   },
   {
-    title: "Build Launch Plan",
-    description: "30-day multi-channel product launch plan for a developer security startup.",
+    title: "Product Launch Strategy",
+    description: "Create a 30-day multi-channel product launch plan for a developer security startup launch.",
     prompt: "Create a 30-day multi-channel product launch plan for a developer security product, including target personas, key messaging, and distribution channels.",
     icon: ShieldAlert,
     color: "from-blue-500/20 to-cyan-500/20 border-blue-500/30 text-blue-400"
   },
   {
-    title: "Research AI Competitors",
-    description: "Analyze top AI coding tools, their pricing stacks, and core capabilities.",
+    title: "Competitor Intelligence Report",
+    description: "Analyze and compare the top 5 AI coding assistants in 2026, mapping unique value propositions.",
     prompt: "Analyze and compare the top 5 AI coding assistants in 2026, mapping their unique value propositions, pricing tiers, and technological stacks.",
     icon: Search,
     color: "from-amber-500/20 to-orange-500/20 border-amber-500/30 text-amber-400"
-  },
-  {
-    title: "Create Growth Strategy",
-    description: "Product-led growth framework for a collaborative data analytics engine.",
-    prompt: "Design a product-led growth strategy for a collaborative analytics platform, focusing on user activation, viral loops, and conversion touchpoints.",
-    icon: TrendingUp,
-    color: "from-emerald-500/20 to-teal-500/20 border-emerald-500/30 text-emerald-400"
   }
 ]
 
@@ -226,7 +219,7 @@ export function DashboardPage() {
             <p className="text-xs text-zinc-500 mt-1">One-click deployment to stream live agent execution, tools activity, and report synthesis.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
             {PRESETS.map((preset) => {
               const Icon = preset.icon
               const isLaunching = launchingPreset === preset.title
@@ -238,7 +231,7 @@ export function DashboardPage() {
                   onClick={() => !launchingPreset && handleLaunchPreset(preset)}
                 >
                   <div className={cn("absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none", preset.color.split(' ')[0])} />
-                  <CardContent className="p-6 flex gap-4 items-start relative z-10">
+                  <CardContent className="p-6 flex flex-col gap-4 items-start relative z-10 h-full justify-between">
                     <div className={cn("p-3 rounded-2xl border shrink-0 bg-zinc-950", preset.color.split(' ').slice(1, 3).join(' '))}>
                       {isLaunching ? (
                         <Loader2 className="w-6 h-6 animate-spin text-brand-400" />
@@ -246,12 +239,12 @@ export function DashboardPage() {
                         <Icon className="w-6 h-6" />
                       )}
                     </div>
-                    <div className="space-y-1.5 min-w-0">
+                    <div className="space-y-1.5 min-w-0 flex-1 mt-2">
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold text-zinc-200 group-hover:text-brand-300 transition-colors">{preset.title}</h4>
                         <ArrowUpRight className="w-4 h-4 text-zinc-600 group-hover:text-brand-400 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                       </div>
-                      <p className="text-xs sm:text-sm text-zinc-400 line-clamp-2 leading-relaxed">{preset.description}</p>
+                      <p className="text-xs text-zinc-400 leading-relaxed">{preset.description}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -299,7 +292,7 @@ export function DashboardPage() {
             One-Click Launch
           </Badge>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {PRESETS.map((preset) => {
             const Icon = preset.icon
             const isLaunching = launchingPreset === preset.title

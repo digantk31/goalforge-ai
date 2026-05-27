@@ -55,6 +55,52 @@ const getGenericFakeLogs = (stepName: string) => [
   `💾 [Context] Appending step checkpoints to current execution stack...`
 ]
 
+// Web Audio API Synthesized Premium Sound Helper
+const playOscillatorSound = (type: 'start' | 'ping' | 'success') => {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext
+    if (!AudioCtx) return
+    const ctx = new AudioCtx()
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+    
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+    
+    if (type === 'start') {
+      // Subtle ascending tech chime
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(261.63, ctx.currentTime) // C4
+      osc.frequency.exponentialRampToValueAtTime(523.25, ctx.currentTime + 0.25) // C5
+      gain.gain.setValueAtTime(0.04, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.25)
+    } else if (type === 'ping') {
+      // Clean, low-level high E-note completion ping
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime) // E5
+      gain.gain.setValueAtTime(0.015, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.12)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.12)
+    } else if (type === 'success') {
+      // Harmonious double-chime ascending major chord (C5 -> E5 -> G5 -> C6)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime)
+      osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08)
+      osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16)
+      osc.frequency.setValueAtTime(1046.50, ctx.currentTime + 0.24)
+      gain.gain.setValueAtTime(0.035, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.4)
+    }
+  } catch {
+    // Audio Context is blocked/unsupported initially
+  }
+}
+
 export function WorkflowRunPage() {
   const { goalId } = useParams<{ goalId: string }>()
   const location = useLocation()
@@ -66,7 +112,26 @@ export function WorkflowRunPage() {
   const [goalTitle, setGoalTitle] = useState<string>('')
   const [copied, setCopied] = useState(false)
   const [isRerunning, setIsRerunning] = useState(false)
+  
+  // Live Timer State
+  const [elapsedTime, setElapsedTime] = useState(0)
+
   const logsEndRef = useRef<HTMLDivElement>(null)
+
+  // Interval timer hook
+  useEffect(() => {
+    if (isComplete || steps.length === 0) return
+    const timer = setInterval(() => {
+      setElapsedTime(prev => prev + 1)
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [isComplete, steps.length])
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+    const secs = seconds % 60
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
 
   // Warm-up initial logs on mount or rerun
   const runInitialLogs = () => {
@@ -118,6 +183,7 @@ export function WorkflowRunPage() {
   // Run initial logs on load
   useEffect(() => {
     runInitialLogs()
+    playOscillatorSound('start')
   }, [])
 
   useEffect(() => {
@@ -135,6 +201,11 @@ export function WorkflowRunPage() {
             queueFakeLogs(data.step)
           }
 
+          // If a step finishes, play a subtle tech ping sound
+          if (data.status === 'completed') {
+            playOscillatorSound('ping')
+          }
+
           setSteps(prev => {
             const existing = prev.find(s => s.id === (data.id || data.step))
             if (existing) {
@@ -148,6 +219,7 @@ export function WorkflowRunPage() {
           setFinalReport(data.report)
           setShowReport(true)
           setIsComplete(true)
+          playOscillatorSound('success')
         }
         
         if (data.log) {
@@ -217,7 +289,9 @@ export function WorkflowRunPage() {
     setFinalReport(null)
     setShowReport(false)
     setIsComplete(false)
+    setElapsedTime(0)
     runInitialLogs()
+    playOscillatorSound('start')
     try {
       await api.startWorkflow(goalId)
     } catch (err) {
@@ -335,7 +409,10 @@ export function WorkflowRunPage() {
           >
             <div className="flex items-center justify-between text-xs text-zinc-500 mb-2">
               <span>{isComplete ? '✅ Workflow Complete' : `⚡ Executing ${completedCount}/${steps.length} steps...`}</span>
-              <span className="tabular-nums font-mono">{progressPercent}%</span>
+              <div className="flex items-center gap-3">
+                <span className="font-mono bg-zinc-900 border border-zinc-800 px-2 py-0.5 rounded text-[11px] text-zinc-400">Execution Time: {formatTime(elapsedTime)}</span>
+                <span className="tabular-nums font-mono">{progressPercent}%</span>
+              </div>
             </div>
             <div className="w-full h-1.5 bg-zinc-800 rounded-full overflow-hidden">
               <motion.div
@@ -361,6 +438,12 @@ export function WorkflowRunPage() {
                 <h3 className="text-lg font-medium flex items-center gap-2">
                   <div className={cn("w-2 h-2 rounded-full transition-colors duration-500", isComplete ? "bg-emerald-500 animate-pulse" : "bg-brand-500 animate-pulse")} />
                   Live Timeline
+                  {!isComplete && steps.length > 0 && (
+                    <div className="ml-2 relative inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-[10px] font-semibold text-brand-400 font-sans">
+                      <span className="w-1.5 h-1.5 rounded-full bg-brand-400 animate-ping" />
+                      Agent Active
+                    </div>
+                  )}
                   {steps.length > 0 && (
                     <span className="ml-auto text-xs text-zinc-500 font-normal tabular-nums">{completedCount}/{steps.length}</span>
                   )}
@@ -387,7 +470,7 @@ export function WorkflowRunPage() {
                     </div>
                     <div className="space-y-1.5 max-w-xs mx-auto">
                       <p className="text-sm font-semibold text-zinc-300 flex items-center justify-center gap-1.5">
-                        Gemini is reasoning
+                        Gemini is analyzing your objective
                         <span className="flex gap-0.5">
                           <span className="w-1 h-1 bg-zinc-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                           <span className="w-1 h-1 bg-zinc-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
