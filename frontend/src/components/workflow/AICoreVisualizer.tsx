@@ -23,12 +23,8 @@ interface AgentNode {
 }
 
 interface DataPacket {
-  startX: number
-  startY: number
-  controlX: number
-  controlY: number
-  endX: number
-  endY: number
+  source: 'core' | string
+  target: 'core' | string
   progress: number
   speed: number
   color: string
@@ -111,26 +107,15 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
       return (1 - t) * (1 - t) * p0 + 2 * (1 - t) * t * p1 + t * t * p2
     }
 
-    // Helper to spawn curved data pipeline between two points
-    const spawnDataPipeline = (x1: number, y1: number, x2: number, y2: number, color: string) => {
-      const midX = (x1 + x2) / 2
-      const midY = (y1 + y2) / 2
-      const angle = Math.atan2(y2 - y1, x2 - x1)
-      const offset = 60 + Math.random() * 40
-      const controlX = midX + Math.cos(angle + Math.PI / 2) * offset
-      const controlY = midY + Math.sin(angle + Math.PI / 2) * offset
-
+    // Helper to spawn curved data pipeline between two points dynamically
+    const spawnDataPipeline = (source: 'core' | string, target: 'core' | string, color: string) => {
       for (let i = 0; i < 6; i++) {
         setTimeout(() => {
           dataPackets.push({
-            startX: x1,
-            startY: y1,
-            controlX,
-            controlY,
-            endX: x2,
-            endY: y2,
+            source,
+            target,
             progress: 0,
-            speed: 0.015 + Math.random() * 0.01,
+            speed: 0.012 + Math.random() * 0.008,
             color,
             size: 2.2 + Math.random() * 1.5,
           })
@@ -197,15 +182,24 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         }
       })
 
-      // 5. Update & Draw curved data packets sliding along Bezier pathways
+      // 5. Update & Draw curved data packets sliding along live, elastic Bezier pathways
+      const getAgentCoords = (name: 'core' | string) => {
+        if (name === 'core') return { x: centerX, y: centerY }
+        const agent = agents.find(a => a.name === name)
+        return agent ? { x: agent.x, y: agent.y } : { x: centerX, y: centerY }
+      }
+
       for (let i = dataPackets.length - 1; i >= 0; i--) {
         const packet = dataPackets[i]
         packet.progress += packet.speed
 
+        const start = getAgentCoords(packet.source)
+        const end = getAgentCoords(packet.target)
+
         if (packet.progress >= 1) {
           waves.push({
-            x: packet.endX,
-            y: packet.endY,
+            x: end.x,
+            y: end.y,
             radius: 4,
             maxRadius: 28,
             color: packet.color,
@@ -215,17 +209,27 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
           continue
         }
 
-        const px = getBezierPoint(packet.progress, packet.startX, packet.controlX, packet.endX)
-        const py = getBezierPoint(packet.progress, packet.startY, packet.controlY, packet.endY)
+        // Calculate live control point that moves dynamically with the agents!
+        const midX = (start.x + end.x) / 2
+        const midY = (start.y + end.y) / 2
+        const angle = Math.atan2(end.y - start.y, end.x - start.x)
+        const offset = 55 + (i % 3) * 15
+        const controlX = midX + Math.cos(angle + Math.PI / 2) * offset
+        const controlY = midY + Math.sin(angle + Math.PI / 2) * offset
 
+        const px = getBezierPoint(packet.progress, start.x, controlX, end.x)
+        const py = getBezierPoint(packet.progress, start.y, controlY, end.y)
+
+        // Draw live curved pipeline trail
         ctx.strokeStyle = packet.color
         ctx.lineWidth = 1.0
         ctx.globalAlpha = (1 - packet.progress) * 0.18
         ctx.beginPath()
-        ctx.moveTo(packet.startX, packet.startY)
-        ctx.quadraticCurveTo(packet.controlX, packet.controlY, packet.endX, packet.endY)
+        ctx.moveTo(start.x, start.y)
+        ctx.quadraticCurveTo(controlX, controlY, end.x, end.y)
         ctx.stroke()
 
+        // Draw glowing data particle
         ctx.save()
         ctx.fillStyle = '#ffffff'
         ctx.shadowBlur = 12
@@ -258,16 +262,18 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         ctx.restore()
       }
 
-      // 7. Spawn Dynamic Connection Pipelines
+      // 7. Spawn Dynamic Connection Pipelines (Sequentially Orchestrated)
       const pipelineInterval = isSynthesizing ? 0.05 : 0.005
       if (Math.random() < pipelineInterval && agents.length > 1) {
         const active = agents.filter(a => a.isActive)
         const sourceAgent = active.length > 0 ? active[Math.random() * active.length | 0] : agents[Math.random() * agents.length | 0]
         
         if (Math.random() > 0.45) {
-          spawnDataPipeline(sourceAgent.x, sourceAgent.y, centerX, centerY, sourceAgent.color)
+          // Connect Agent -> Core
+          spawnDataPipeline(sourceAgent.name, 'core', sourceAgent.color)
         } else {
-          spawnDataPipeline(centerX, centerY, sourceAgent.x, sourceAgent.y, '#c084fc')
+          // Connect Core -> Agent
+          spawnDataPipeline('core', sourceAgent.name, '#c084fc')
         }
       }
 
