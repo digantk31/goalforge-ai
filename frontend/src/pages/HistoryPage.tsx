@@ -104,6 +104,7 @@ export function HistoryPage() {
   const [goals, setGoals] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('All Statuses')
+  const [searchQuery, setSearchQuery] = useState('')
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; title: string } | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
@@ -143,9 +144,19 @@ export function HistoryPage() {
   }
 
   const filteredGoals = goals.filter(g => {
-    if (filter === 'All Statuses') return true
-    const s = g.status || 'completed'
-    return s.toLowerCase() === filter.toLowerCase()
+    // 1. Filter by Status
+    if (filter !== 'All Statuses') {
+      const s = g.status || 'completed'
+      if (s.toLowerCase() !== filter.toLowerCase()) return false
+    }
+    // 2. Filter by Search Query
+    if (searchQuery.trim() !== '') {
+      const q = searchQuery.toLowerCase()
+      const title = (g.title || '').toLowerCase()
+      const desc = (g.description || '').toLowerCase()
+      if (!title.includes(q) && !desc.includes(q)) return false
+    }
+    return true
   })
 
   return (
@@ -164,7 +175,13 @@ export function HistoryPage() {
       <Card className="glass border-zinc-800/50 p-2">
         <div className="flex flex-col sm:flex-row gap-3 p-2">
           <div className="flex-1">
-             <Input icon={<Search className="w-4 h-4 text-zinc-500" />} placeholder="Search goals..." className="w-full bg-zinc-900/50" />
+             <Input 
+               value={searchQuery} 
+               onChange={(e) => setSearchQuery(e.target.value)} 
+               icon={<Search className="w-4 h-4 text-zinc-500" />} 
+               placeholder="Search goals..." 
+               className="w-full bg-zinc-900/50" 
+             />
           </div>
           <div className="flex gap-3">
              <div className="relative">
