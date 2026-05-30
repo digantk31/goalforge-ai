@@ -369,9 +369,9 @@ export function SplashScreen({ children }: { children: React.ReactNode }) {
                 </div>
 
                 {/* Glassmorphic Cyber Progress Bar */}
-                <div className="relative w-full h-1 bg-zinc-950 border border-zinc-900 rounded-full overflow-hidden p-[1px] shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]">
+                <div className="relative w-full h-2 bg-zinc-950 border border-zinc-900/60 rounded-full overflow-hidden shadow-[inset_0_1px_3px_rgba(0,0,0,0.8)]">
                   <motion.div
-                    className="absolute inset-y-[1px] left-[1px] bg-gradient-to-r from-brand-600 via-emerald-400 to-brand-500 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.7)]"
+                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-brand-600 via-emerald-400 to-indigo-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.8)]"
                     initial={{ width: '0%' }}
                     animate={{ width: '100%' }}
                     transition={{ duration: 2.8, ease: [0.25, 0.8, 0.25, 1] }}
