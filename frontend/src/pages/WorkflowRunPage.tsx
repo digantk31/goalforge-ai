@@ -306,6 +306,7 @@ export function WorkflowRunPage() {
   const progressPercent = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0
   const runningStep = steps.find(s => s.status === 'running')
   const activeStepName = runningStep ? runningStep.name : null
+  const isSynthesizingReport = steps.length > 0 && completedCount === steps.length && !finalReport
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
@@ -685,6 +686,63 @@ export function WorkflowRunPage() {
           </AnimatePresence>
         </div>
       </div>
+      {/* Full Screen Report Synthesis Overlay */}
+      <AnimatePresence>
+        {isSynthesizingReport && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0, scale: 1.05 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className="fixed inset-0 z-50 bg-[#060606] flex items-center justify-center p-6"
+          >
+            {/* The Full Screen Canvas */}
+            <div className="absolute inset-0">
+              <AICoreVisualizer 
+                activeStepName={null} 
+                isComplete={false} 
+                isSynthesizing={true} 
+              />
+            </div>
+
+            {/* Glowing Center HUD Panel */}
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ delay: 0.2, type: 'spring', stiffness: 200, damping: 25 }}
+              className="relative z-10 glass border border-zinc-800/80 p-8 rounded-3xl max-w-md w-full bg-zinc-950/75 backdrop-blur-xl text-center space-y-6 shadow-[0_0_50px_rgba(139,92,246,0.2)]"
+            >
+              {/* Glowing Orb */}
+              <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-brand-500 rounded-full blur-xl"
+                />
+                <div className="relative p-4 bg-brand-500/10 border border-brand-500/30 rounded-2xl animate-pulse">
+                  <Sparkles className="w-8 h-8 text-brand-400" />
+                </div>
+              </div>
+
+              {/* Status Header */}
+              <div className="space-y-1.5">
+                <h3 className="text-xl font-bold tracking-wide text-zinc-100 flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" />
+                  Synthesizing Report
+                </h3>
+                <p className="text-zinc-400 text-sm">Gemini is consolidating logs, analyzing metrics, and generating your custom blueprint...</p>
+              </div>
+
+              {/* Interactive Neural Console Log Line */}
+              <div className="bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3 text-[11px] font-mono text-zinc-500 text-left flex items-center gap-2 select-none leading-relaxed">
+                <div className="w-1.5 h-1.5 rounded-full bg-brand-500 animate-ping shrink-0" />
+                <span className="truncate">Active logic compilation: streaming markdown tokens...</span>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
