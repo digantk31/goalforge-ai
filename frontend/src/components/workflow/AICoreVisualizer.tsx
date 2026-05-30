@@ -29,6 +29,16 @@ interface Pulse {
   color: string
 }
 
+interface SynapticSpark {
+  startX: number
+  startY: number
+  endX: number
+  endY: number
+  progress: number
+  speed: number
+  color: string
+}
+
 export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = false }: AICoreVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const activeStepRef = useRef<string | null>(null)
@@ -57,22 +67,23 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
     }
     window.addEventListener('resize', handleResize)
 
-    // Particle settings
+    // Particle & Synaptic settings
     const particles: Particle[] = []
-    const particleCount = 45
-    const connectionDistance = 90
+    const particleCount = isSynthesizing ? 65 : 45 // More particles during synthesis
+    const connectionDistance = 100
     const pulses: Pulse[] = []
+    const sparks: SynapticSpark[] = []
 
     // Helper to generate particle
     const createParticle = (x?: number, y?: number, speedScale = 1): Particle => {
       const angle = Math.random() * Math.PI * 2
-      const speed = (0.2 + Math.random() * 0.4) * speedScale
+      const speed = (0.25 + Math.random() * 0.45) * speedScale
       return {
         x: x !== undefined ? x : Math.random() * width,
         y: y !== undefined ? y : Math.random() * height,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        radius: 1.5 + Math.random() * 2.5,
+        radius: 1.5 + Math.random() * 2.8,
         color: Math.random() > 0.4 ? '#8b5cf6' : '#10b981', // Brand purple or emerald green
         alpha: 0.3 + Math.random() * 0.5,
         pulseSpeed: 0.01 + Math.random() * 0.02,
@@ -90,27 +101,28 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
       const centerX = width / 2
       const centerY = height / 2
 
-      // Create a visual expanding circle pulse
+      // Create expanding telemetry pulse
       pulses.push({
         x: centerX,
         y: centerY,
-        maxRadius: Math.max(width, height) * 0.6,
+        maxRadius: Math.max(width, height) * 0.65,
         currentRadius: 0,
-        speed: 4 + Math.random() * 2,
+        speed: 5 + Math.random() * 2,
         color: activeStepName ? '#8b5cf6' : '#10b981',
       })
 
-      // Spawn rapid burst particles shooting outwards
-      for (let i = 0; i < 15; i++) {
-        const p = createParticle(centerX, centerY, 3.5)
-        // Make burst particles brighter
+      // Spawn burst particles
+      const count = isSynthesizing ? 25 : 15
+      for (let i = 0; i < count; i++) {
+        const p = createParticle(centerX, centerY, isSynthesizing ? 4.5 : 3.5)
         p.alpha = 1.0
         particles.push(p)
       }
 
-      // Keep particle array size stable by removing old ones
-      if (particles.length > 80) {
-        particles.splice(0, particles.length - 80)
+      // Cap particles limit to prevent slowdown
+      const limit = isSynthesizing ? 120 : 80
+      if (particles.length > limit) {
+        particles.splice(0, particles.length - limit)
       }
     }
 
@@ -133,8 +145,8 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
     const draw = () => {
       if (!ctx || !canvas) return
       
-      // Clear canvas with trace transparency for a sci-fi motion blur
-      ctx.fillStyle = 'rgba(10, 10, 10, 0.22)'
+      // Clear canvas with trail blur for motion trail effect
+      ctx.fillStyle = 'rgba(6, 6, 6, 0.25)'
       ctx.fillRect(0, 0, width, height)
 
       const centerX = width / 2
@@ -154,15 +166,15 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         }
 
         ctx.strokeStyle = pulse.color
-        ctx.globalAlpha = alpha * 0.15
-        ctx.lineWidth = 1.5
+        ctx.globalAlpha = alpha * 0.2
+        ctx.lineWidth = 1.8
         ctx.beginPath()
         ctx.arc(pulse.x, pulse.y, pulse.currentRadius, 0, Math.PI * 2)
         ctx.stroke()
         ctx.globalAlpha = 1.0 // Reset
       }
 
-      // 2. Draw Connections (Lines)
+      // 2. Draw Connections (Lines) & Spawn Synaptic Sparks
       for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
           const dx = particles[i].x - particles[j].x
@@ -170,7 +182,7 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
           const dist = Math.sqrt(dx * dx + dy * dy)
 
           if (dist < connectionDistance) {
-            const alpha = (1 - dist / connectionDistance) * 0.25
+            const alpha = (1 - dist / connectionDistance) * 0.26
             ctx.strokeStyle = particles[i].color === '#8b5cf6' ? 'rgba(139, 92, 246, 0.4)' : 'rgba(16, 185, 129, 0.4)'
             ctx.globalAlpha = alpha
             ctx.lineWidth = 0.8
@@ -179,30 +191,77 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
             ctx.lineTo(particles[j].x, particles[j].y)
             ctx.stroke()
             ctx.globalAlpha = 1.0 // Reset
+
+            // ⚡ Randomly spawn electrical synaptic sparks moving along lines
+            const spawnChance = isSynthesizing ? 0.025 : 0.007
+            const maxSparks = isSynthesizing ? 45 : 20
+            if (Math.random() < spawnChance && sparks.length < maxSparks) {
+              sparks.push({
+                startX: particles[i].x,
+                startY: particles[i].y,
+                endX: particles[j].x,
+                endY: particles[j].y,
+                progress: 0,
+                speed: 0.015 + Math.random() * 0.035,
+                color: particles[i].color === '#8b5cf6' ? '#c084fc' : '#34d399', // Bright glowing colors
+              })
+            }
           }
         }
       }
 
-      // 3. Draw and Update Particles
-      particles.forEach((p) => {
-        // Apply gravitational pull / swirl effect during synthesis
+      // 3. Draw & Update Synaptic Sparks (Electrical impulses)
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const spark = sparks[i]
+        spark.progress += spark.speed
+
+        if (spark.progress >= 1) {
+          sparks.splice(i, 1)
+          continue
+        }
+
+        const x = spark.startX + (spark.endX - spark.startX) * spark.progress
+        const y = spark.startY + (spark.endY - spark.startY) * spark.progress
+
+        // Draw electrical spark trail
+        ctx.save()
+        ctx.fillStyle = '#ffffff'
+        ctx.shadowBlur = 12
+        ctx.shadowColor = spark.color
+        ctx.beginPath()
+        ctx.arc(x, y, 2.4, 0, Math.PI * 2)
+        ctx.fill()
+
+        // Tiny electrical pulse tail
+        ctx.strokeStyle = spark.color
+        ctx.globalAlpha = (1 - spark.progress) * 0.4
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.moveTo(spark.startX, spark.startY)
+        ctx.lineTo(x, y)
+        ctx.stroke()
+        ctx.restore()
+      }
+
+      // 4. Draw and Update Particles & Cyber data labels
+      particles.forEach((p, idx) => {
+        // Apply gravitational pull / swirl effect during synthesis (creating a visual black hole vortex)
         if (isSynthesizing) {
           const dx = centerX - p.x
           const dy = centerY - p.y
           const dist = Math.sqrt(dx * dx + dy * dy)
           if (dist > 10) {
-            // Stronger pull close in, weak pull far away + spiral force
-            const pullForce = 0.06
+            const pullForce = 0.05
             const spiralForce = 0.04
             p.vx += (dx / dist) * pullForce + (dy / dist) * spiralForce
             p.vy += (dy / dist) * pullForce - (dx / dist) * spiralForce
           }
           
-          // Cap speeds during synthesis
+          // Cap speeds
           const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy)
-          if (speed > 3.5) {
-            p.vx = (p.vx / speed) * 3.5
-            p.vy = (p.vy / speed) * 3.5
+          if (speed > 3.8) {
+            p.vx = (p.vx / speed) * 3.8
+            p.vy = (p.vy / speed) * 3.8
           }
         }
 
@@ -221,20 +280,53 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         // Draw particle
         ctx.fillStyle = p.color
         ctx.globalAlpha = Math.max(0.1, Math.min(1.0, p.alpha))
-        ctx.shadowBlur = 10
+        ctx.shadowBlur = 8
         ctx.shadowColor = p.color
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2)
         ctx.fill()
         
+        // Draw floating cyber data texts next to some particles (adds ultra-realistic AI complexity)
+        if (idx % 6 === 0 && p.alpha > 0.55) {
+          const labels = ['0x8F', 'NODE_OK', 'LOGIC_GATE', 'GEMINI_CORE', '0xFF', 'TOKEN_STREAM', 'VIRTUAL_CPU', 'SYNAPSE_A1', 'METRIC_DB']
+          const label = labels[idx % labels.length]
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.32)'
+          ctx.font = '8px monospace'
+          ctx.fillText(label, p.x + 8, p.y + 3)
+        }
+
         ctx.globalAlpha = 1.0 // Reset
         ctx.shadowBlur = 0 // Reset shadow
       })
 
-      // 4. Draw Rotating Quantum Core in Center
-      coreAngle += isComplete ? 0.005 : isSynthesizing ? 0.075 : 0.015
+      // 5. Draw Rotating Quantum Core & HUD compass in Center
+      coreAngle += isComplete ? 0.005 : isSynthesizing ? 0.065 : 0.015
 
-      // Layer 1: Outermost glowing circle
+      // Complex holographic HUD coordinate ticks (highly professional AI look)
+      ctx.save()
+      ctx.translate(centerX, centerY)
+      ctx.rotate(-coreAngle * 0.4)
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.2)'
+      ctx.lineWidth = 0.8
+      
+      // Thin coordinate compass rings
+      ctx.beginPath()
+      ctx.arc(0, 0, 75, 0, Math.PI * 2)
+      ctx.stroke()
+      
+      ctx.beginPath()
+      ctx.moveTo(-82, 0)
+      ctx.lineTo(-72, 0)
+      ctx.moveTo(72, 0)
+      ctx.lineTo(82, 0)
+      ctx.moveTo(0, -82)
+      ctx.lineTo(0, -72)
+      ctx.moveTo(0, 72)
+      ctx.lineTo(0, 82)
+      ctx.stroke()
+      ctx.restore()
+
+      // Core circles
       ctx.save()
       ctx.translate(centerX, centerY)
       ctx.rotate(coreAngle)
@@ -269,7 +361,7 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
 
       // Layer 4: Solid glowing consciousness center orb
       const coreSize = isSynthesizing 
-        ? 13 + Math.sin(coreAngle * 4.5) * 3.0 
+        ? 14 + Math.sin(coreAngle * 4.5) * 3.0 
         : 10 + Math.sin(coreAngle * 3) * 1.5
       const coreGrad = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, coreSize)
       coreGrad.addColorStop(0, '#ffffff')
@@ -300,7 +392,7 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
   }, [activeStepName, isComplete, isSynthesizing])
 
   return (
-    <div className="relative w-full h-full min-h-[300px] rounded-xl overflow-hidden bg-[#0a0a0a] border border-zinc-800/40 flex flex-col items-center justify-center p-6">
+    <div className="relative w-full h-full min-h-[300px] rounded-xl overflow-hidden bg-[#060606] border border-zinc-900 flex flex-col items-center justify-center p-6 shadow-inner">
       {/* Decorative grids */}
       <div className="absolute inset-0 bg-cyber-grid opacity-15 pointer-events-none" />
       
