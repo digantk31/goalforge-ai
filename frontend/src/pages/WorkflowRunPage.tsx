@@ -1,5 +1,4 @@
 import { useEffect, useState, useRef } from 'react'
-import ReactMarkdown from 'react-markdown'
 import { useParams, useLocation, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Circle, Loader2, AlertCircle, TerminalSquare, FileText, Sparkles, Copy, Check, RotateCcw, Download, ArrowLeft } from 'lucide-react'
@@ -9,6 +8,7 @@ import { cn } from '@/lib/cn'
 import { API_URL } from '@/lib/constants'
 import { api } from '@/lib/api'
 import { AICoreVisualizer } from '@/components/workflow/AICoreVisualizer'
+import { HolographicDecryptor } from '@/components/workflow/HolographicDecryptor'
 
 interface Step {
   id: string
@@ -609,7 +609,7 @@ export function WorkflowRunPage() {
                 {/* Report Body */}
                 <div className="flex-1 rounded-b-xl border border-zinc-800 bg-zinc-950/80 overflow-y-auto custom-scrollbar">
                   <div className="p-8 report-content">
-                    <ReactMarkdown>{finalReport}</ReactMarkdown>
+                    <HolographicDecryptor markdown={finalReport} />
                   </div>
                 </div>
               </motion.div>

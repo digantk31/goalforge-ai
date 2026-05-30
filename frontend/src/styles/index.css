@@ -454,3 +454,31 @@ select:focus {
   background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
   animation: breathe 3s ease-in-out infinite;
 }
+
+/* ============================================
+   Holographic Cyber Decryption & Scanning
+   ============================================ */
+
+@keyframes laser-sweep {
+  0% { top: 0%; opacity: 0; }
+  8% { opacity: 1; }
+  92% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+.laser-scan-line {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, #10b981, #c084fc, #10b981, transparent);
+  box-shadow: 0 0 12px #10b981, 0 0 24px #8b5cf6;
+  animation: laser-sweep 3s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.cyber-decrypt-layer {
+  position: relative;
+  animation: fade-in 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}

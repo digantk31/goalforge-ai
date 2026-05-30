@@ -44,6 +44,13 @@ interface TelemetryWave {
   alpha: number
 }
 
+// 3D Wireframe Vector interface
+interface Vector3D {
+  x: number
+  y: number
+  z: number
+}
+
 export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = false }: AICoreVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const activeStepRef = useRef<string | null>(null)
@@ -79,9 +86,25 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
       { name: 'report', label: 'Report Agent', color: '#34d399', glowColor: 'rgba(16, 185, 129, 0.45)', angle: ((Math.PI * 2) / 5) * 4, radius: 160, x: 0, y: 0, pulse: 0.6, pulseDir: 1, isActive: false },
     ]
 
+    // 2. Define 3D Tesseract Vertices (Hypercube Projection)
+    // A Tesseract consists of 16 vertices: an outer 3D cube and an inner 3D cube
+    const outerCubeVertices: Vector3D[] = [
+      { x: -1, y: -1, z: -1 }, { x: 1, y: -1, z: -1 }, { x: 1, y: 1, z: -1 }, { x: -1, y: 1, z: -1 },
+      { x: -1, y: -1, z: 1 },  { x: 1, y: -1, z: 1 },  { x: 1, y: 1, z: 1 },  { x: -1, y: 1, z: 1 }
+    ]
+    const innerCubeVertices: Vector3D[] = outerCubeVertices.map(v => ({ x: v.x * 0.5, y: v.y * 0.5, z: v.z * 0.5 }))
+    
+    const cubeEdges = [
+      [0, 1], [1, 2], [2, 3], [3, 0], // Back face edges
+      [4, 5], [5, 6], [6, 7], [7, 4], // Front face edges
+      [0, 4], [1, 5], [2, 6], [3, 7]  // Connecting pillars
+    ]
+
     const dataPackets: DataPacket[] = []
     const waves: TelemetryWave[] = []
     let coreAngle = 0
+    let rotX = 0
+    let rotY = 0
 
     // Helper to calculate Bezier point
     const getBezierPoint = (t: number, p0: number, p1: number, p2: number) => {
@@ -90,7 +113,6 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
 
     // Helper to spawn curved data pipeline between two points
     const spawnDataPipeline = (x1: number, y1: number, x2: number, y2: number, color: string) => {
-      // Calculate curved control point in the middle
       const midX = (x1 + x2) / 2
       const midY = (y1 + y2) / 2
       const angle = Math.atan2(y2 - y1, x2 - x1)
@@ -98,7 +120,6 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
       const controlX = midX + Math.cos(angle + Math.PI / 2) * offset
       const controlY = midY + Math.sin(angle + Math.PI / 2) * offset
 
-      // Spawn 6 sequential glowing packets
       for (let i = 0; i < 6; i++) {
         setTimeout(() => {
           dataPackets.push({
@@ -129,10 +150,10 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
       const centerY = height / 2
 
       // Slowly rotate the entire multi-agent orbit
-      coreAngle += isSynthesizing ? 0.015 : 0.005
+      coreAngle += isSynthesizing ? 0.012 : 0.004
 
-      // 2. Draw Subtle Holographic Digital Concentric Coordinate Rings
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.05)'
+      // 3. Draw Subtle Holographic Digital Concentric Coordinate Rings
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.04)'
       ctx.lineWidth = 1
       ctx.setLineDash([0])
       
@@ -144,14 +165,13 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
       ctx.arc(centerX, centerY, dynamicRadius * 0.5, 0, Math.PI * 2)
       ctx.stroke()
       
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.04)'
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.03)'
       ctx.beginPath()
       ctx.arc(centerX, centerY, dynamicRadius, 0, Math.PI * 2)
       ctx.stroke()
 
-      // 3. Update & Position Agent Nodes in a Beautiful Orbit
+      // 4. Update & Position Agent Nodes in a Beautiful Orbit
       agents.forEach((agent, index) => {
-        // Orbit calculation with gentle floating bobbing and dynamic responsive radius
         const currentAngle = agent.angle + coreAngle * 0.5
         const bob = Math.sin(coreAngle * 3 + index) * 6
         agent.x = centerX + Math.cos(currentAngle) * dynamicRadius
@@ -164,7 +184,7 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         // Map step execution status to Agent active highlights
         const step = (activeStepName || '').toLowerCase()
         if (isSynthesizing) {
-          agent.isActive = true // All agents super-activated during synthesis vortex compiling!
+          agent.isActive = true // All agents activated during report synthesis
         } else if (activeStepName) {
           if (agent.name === 'planner' && (step.includes('plan') || step.includes('analyze'))) agent.isActive = true
           else if (agent.name === 'research' && (step.includes('research') || step.includes('gather') || step.includes('data'))) agent.isActive = true
@@ -177,13 +197,12 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         }
       })
 
-      // 4. Update & Draw curved data packets sliding along Bezier pathways
+      // 5. Update & Draw curved data packets sliding along Bezier pathways
       for (let i = dataPackets.length - 1; i >= 0; i--) {
         const packet = dataPackets[i]
         packet.progress += packet.speed
 
         if (packet.progress >= 1) {
-          // Trigger a beautiful glowing ripple wave at end point
           waves.push({
             x: packet.endX,
             y: packet.endY,
@@ -196,11 +215,9 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
           continue
         }
 
-        // Calculate current x,y along the Bezier curve
         const px = getBezierPoint(packet.progress, packet.startX, packet.controlX, packet.endX)
         const py = getBezierPoint(packet.progress, packet.startY, packet.controlY, packet.endY)
 
-        // Draw curved faint pipeline trail
         ctx.strokeStyle = packet.color
         ctx.lineWidth = 1.0
         ctx.globalAlpha = (1 - packet.progress) * 0.18
@@ -209,7 +226,6 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         ctx.quadraticCurveTo(packet.controlX, packet.controlY, packet.endX, packet.endY)
         ctx.stroke()
 
-        // Draw glowing data particle
         ctx.save()
         ctx.fillStyle = '#ffffff'
         ctx.shadowBlur = 12
@@ -221,7 +237,7 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         ctx.globalAlpha = 1.0
       }
 
-      // 5. Update & Draw Telemetry Ripple Waves
+      // 6. Update & Draw Telemetry Ripple Waves
       for (let i = waves.length - 1; i >= 0; i--) {
         const wave = waves[i]
         wave.radius += isSynthesizing ? 1.4 : 0.8
@@ -242,67 +258,126 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         ctx.restore()
       }
 
-      // 6. Spawn Dynamic Connection Pipelines (Sequentially Orchestrated)
-      // High frequency during synthesis, standard during normal runs
-      const pipelineInterval = isSynthesizing ? 0.04 : 0.005
+      // 7. Spawn Dynamic Connection Pipelines
+      const pipelineInterval = isSynthesizing ? 0.05 : 0.005
       if (Math.random() < pipelineInterval && agents.length > 1) {
-        // Find active agent or random agent
         const active = agents.filter(a => a.isActive)
         const sourceAgent = active.length > 0 ? active[Math.random() * active.length | 0] : agents[Math.random() * agents.length | 0]
         
-        // Connect to center core OR to another random agent node
-        if (Math.random() > 0.4) {
-          // Connect Agent -> Core
+        if (Math.random() > 0.45) {
           spawnDataPipeline(sourceAgent.x, sourceAgent.y, centerX, centerY, sourceAgent.color)
         } else {
-          // Connect Core -> Agent
           spawnDataPipeline(centerX, centerY, sourceAgent.x, sourceAgent.y, '#c084fc')
         }
       }
 
-      // 7. Draw Central Orchestrator Core (Representing Gemini)
-      // Inner glowing core
-      const coreSize = isSynthesizing 
-        ? 15 + Math.sin(coreAngle * 4.5) * 3.5 
-        : 11 + Math.sin(coreAngle * 2) * 1.5
+      // 8. Draw Central Orchestrator Core (Representing Gemini)
+      // 3D PERSPECTIVE PROJECTION OF THE ROTATING TESSERACT (HYPERCUBE)
+      rotX += isComplete ? 0.003 : isSynthesizing ? 0.038 : 0.008
+      rotY += isComplete ? 0.004 : isSynthesizing ? 0.046 : 0.010
 
-      const coreGrad = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, coreSize + 25)
-      coreGrad.addColorStop(0, '#ffffff')
-      coreGrad.addColorStop(0.2, '#c084fc')
-      coreGrad.addColorStop(0.5, 'rgba(139, 92, 246, 0.25)')
-      coreGrad.addColorStop(1, 'rgba(139, 92, 246, 0)')
+      const tesseractScale = isComplete 
+        ? 12 
+        : isSynthesizing 
+          ? Math.max(38, Math.min(width, height) * 0.05) 
+          : 18
+
+      // Projection function: takes a 3D vector, applies X/Y rotations, and projects onto 2D canvas
+      const project3D = (v: Vector3D, scale: number) => {
+        let x = v.x
+        let y = v.y
+        let z = v.z
+
+        // Rotate Y axis
+        const cosY = Math.cos(rotY)
+        const sinY = Math.sin(rotY)
+        const x1 = x * cosY - z * sinY
+        const z1 = x * sinY + z * cosY
+
+        // Rotate X axis
+        const cosX = Math.cos(rotX)
+        const sinX = Math.sin(rotX)
+        const y2 = y * cosX - z1 * sinX
+        const z2 = y * sinX + z1 * cosX
+
+        // Perspective projection factor
+        const distance = 3
+        const zoom = scale * (distance / (distance + z2))
+
+        return {
+          x: centerX + x1 * zoom,
+          y: centerY + y2 * zoom
+        }
+      }
+
+      // Project all 16 tesseract vertices (8 outer cube, 8 inner cube)
+      const projectedOuter = outerCubeVertices.map(v => project3D(v, tesseractScale))
+      const projectedInner = innerCubeVertices.map(v => project3D(v, tesseractScale))
+
+      // Radial Core Glow
+      const coreGrad = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, tesseractScale * 2.2)
+      coreGrad.addColorStop(0, 'rgba(139, 92, 246, 0.28)')
+      coreGrad.addColorStop(0.5, 'rgba(34, 211, 238, 0.08)')
+      coreGrad.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
       ctx.save()
       ctx.fillStyle = coreGrad
-      ctx.shadowBlur = 30
-      ctx.shadowColor = '#8b5cf6'
       ctx.beginPath()
-      ctx.arc(centerX, centerY, coreSize + 25, 0, Math.PI * 2)
+      ctx.arc(centerX, centerY, tesseractScale * 2.2, 0, Math.PI * 2)
       ctx.fill()
       ctx.restore()
 
-      // Concentric rotating dashboard orbits in the center
+      // Render Tesseract wireframe edges
+      ctx.save()
+      ctx.shadowBlur = isSynthesizing ? 15 : 6
+      
+      // Draw outer cube edges (glowing Purple)
+      ctx.strokeStyle = '#c084fc'
+      ctx.shadowColor = '#8b5cf6'
+      ctx.lineWidth = isSynthesizing ? 1.5 : 1.0
+      cubeEdges.forEach(([from, to]) => {
+        ctx.beginPath()
+        ctx.moveTo(projectedOuter[from].x, projectedOuter[from].y)
+        ctx.lineTo(projectedOuter[to].x, projectedOuter[to].y)
+        ctx.stroke()
+      })
+
+      // Draw inner cube edges (glowing Emerald/Cyan)
+      ctx.strokeStyle = '#34d399'
+      ctx.shadowColor = '#10b981'
+      ctx.lineWidth = isSynthesizing ? 1.2 : 0.8
+      cubeEdges.forEach(([from, to]) => {
+        ctx.beginPath()
+        ctx.moveTo(projectedInner[from].x, projectedInner[from].y)
+        ctx.lineTo(projectedInner[to].x, projectedInner[to].y)
+        ctx.stroke()
+      })
+
+      // Draw tesseract connecting hyper-pillars (between corresponding outer & inner vertices)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.45)'
+      ctx.shadowColor = '#ffffff'
+      ctx.lineWidth = 0.6
+      for (let i = 0; i < 8; i++) {
+        ctx.beginPath()
+        ctx.moveTo(projectedOuter[i].x, projectedOuter[i].y)
+        ctx.lineTo(projectedInner[i].x, projectedInner[i].y)
+        ctx.stroke()
+      }
+      ctx.restore()
+
+      // Rotating compass ticks around tesseract
       ctx.save()
       ctx.translate(centerX, centerY)
-      ctx.rotate(coreAngle)
-      ctx.strokeStyle = 'rgba(167, 139, 250, 0.45)'
-      ctx.lineWidth = 1.2
-      ctx.setLineDash([6, 10])
+      ctx.rotate(coreAngle * 0.4)
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.12)'
+      ctx.lineWidth = 0.8
       ctx.beginPath()
-      ctx.arc(0, 0, 42, 0, Math.PI * 2)
-      ctx.stroke()
-
-      ctx.rotate(-coreAngle * 2)
-      ctx.strokeStyle = 'rgba(34, 211, 238, 0.5)'
-      ctx.setLineDash([4, 6])
-      ctx.beginPath()
-      ctx.arc(0, 0, 26, 0, Math.PI * 2)
+      ctx.arc(0, 0, tesseractScale * 2.8, 0, Math.PI * 2)
       ctx.stroke()
       ctx.restore()
 
-      // 8. Render the Floating Agent Nodes (The Swarm)
+      // 9. Render the Floating Agent Nodes (The Swarm)
       agents.forEach((agent) => {
-        // Draw orbital dotted connecting lines back to core
         ctx.save()
         ctx.strokeStyle = agent.isActive ? agent.color : 'rgba(255, 255, 255, 0.04)'
         ctx.lineWidth = agent.isActive ? 1.2 : 0.8
@@ -338,7 +413,7 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         ctx.stroke()
         ctx.restore()
 
-        // Typography labels with premium cyberpunk indicators
+        // Typography labels
         ctx.fillStyle = agent.isActive ? '#ffffff' : '#71717a'
         ctx.font = agent.isActive ? 'bold 11px monospace' : '10px monospace'
         ctx.textAlign = 'center'
@@ -349,7 +424,7 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
         ctx.fillStyle = agent.isActive ? agent.color : '#3f3f46'
         ctx.font = '8px monospace'
         ctx.fillText(agent.isActive ? '● ACTIVE' : '○ STANDBY', agent.x, agent.y + 26)
-        ctx.shadowBlur = 0 // Reset
+        ctx.shadowBlur = 0
       })
 
       animationFrameId = requestAnimationFrame(draw)
@@ -365,17 +440,13 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
 
   return (
     <div className="relative w-full h-full min-h-[300px] rounded-xl overflow-hidden bg-[#060606] border border-zinc-900 flex flex-col items-center justify-center p-6 shadow-inner">
-      {/* Interactive Cyber grid */}
       <div className="absolute inset-0 bg-cyber-grid opacity-15 pointer-events-none" />
-      
-      {/* Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
-      {/* Visual Overlay Labels */}
       <div className="relative z-10 w-full h-full flex flex-col justify-between items-center text-center select-none pointer-events-none">
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 backdrop-blur-md text-[10px] font-bold text-brand-400 tracking-widest uppercase">
           <Cpu className="w-3.5 h-3.5 animate-pulse text-brand-400" />
-          Multi-Agent Swarm Orchestration
+          Quantum Swarm Orchestrator
         </div>
 
         <div className="space-y-2 mt-auto">
@@ -407,7 +478,7 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
               </div>
               <p className="text-[11px] text-zinc-500 font-mono tracking-wider max-w-xs uppercase">
                 {isSynthesizing 
-                  ? 'Compiling multi-agent report' 
+                  ? 'Compiling multi-dimensional data' 
                   : activeStepName 
                     ? 'Synchronizing neural weights' 
                     : 'Awaiting autonomous planning'}
