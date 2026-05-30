@@ -8,6 +8,7 @@ import { GlowEffect } from '@/components/ui/GlowEffect'
 import { cn } from '@/lib/cn'
 import { API_URL } from '@/lib/constants'
 import { api } from '@/lib/api'
+import { AICoreVisualizer } from '@/components/workflow/AICoreVisualizer'
 
 interface Step {
   id: string
@@ -303,6 +304,8 @@ export function WorkflowRunPage() {
 
   const completedCount = steps.filter(s => s.status === 'completed').length
   const progressPercent = steps.length > 0 ? Math.round((completedCount / steps.length) * 100) : 0
+  const runningStep = steps.find(s => s.status === 'running')
+  const activeStepName = runningStep ? runningStep.name : null
 
   return (
     <div className="max-w-7xl mx-auto py-6 px-4">
@@ -611,60 +614,68 @@ export function WorkflowRunPage() {
               </motion.div>
             ) : (
               <motion.div
-                key="terminal"
+                key="terminal-container"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="h-full"
+                className="grid grid-cols-1 md:grid-cols-12 gap-5 h-full"
                 style={{ maxHeight: 'calc(100vh - 16rem)' }}
               >
-                <Card className="h-full bg-[#0a0a0a] border-zinc-800/50 shadow-2xl flex flex-col relative overflow-hidden group terminal-glow">
-                  {/* Terminal Header */}
-                  <div className="flex items-center px-4 py-3 bg-zinc-900/80 border-b border-zinc-800/50">
-                    <div className="flex gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-500/70 hover:bg-yellow-500 transition-colors" />
-                      <div className="w-3 h-3 rounded-full bg-green-500/70 hover:bg-green-500 transition-colors" />
+                {/* Terminal Card (60% width on md+) */}
+                <div className="md:col-span-7 h-full flex flex-col min-h-0">
+                  <Card className="h-full bg-[#0a0a0a] border-zinc-800/50 shadow-2xl flex flex-col relative overflow-hidden group terminal-glow">
+                    {/* Terminal Header */}
+                    <div className="flex items-center px-4 py-3 bg-zinc-900/80 border-b border-zinc-800/50">
+                      <div className="flex gap-2">
+                        <div className="w-3 h-3 rounded-full bg-red-500/70 hover:bg-red-500 transition-colors" />
+                        <div className="w-3 h-3 rounded-full bg-yellow-500/70 hover:bg-yellow-500 transition-colors" />
+                        <div className="w-3 h-3 rounded-full bg-green-500/70 hover:bg-green-500 transition-colors" />
+                      </div>
+                      <div className="mx-auto text-xs font-mono text-zinc-500 flex items-center gap-2">
+                        <TerminalSquare className="w-3 h-3" />
+                        goalforge-worker
+                      </div>
+                      {!isComplete && logs.length > 0 && (
+                        <div className="w-2 h-2 bg-brand-500 rounded-full animate-pulse" />
+                      )}
                     </div>
-                    <div className="mx-auto text-xs font-mono text-zinc-500 flex items-center gap-2">
-                      <TerminalSquare className="w-3 h-3" />
-                      goalforge-worker
-                    </div>
-                    {!isComplete && logs.length > 0 && (
-                      <div className="w-2 h-2 bg-brand-500 rounded-full animate-pulse" />
-                    )}
-                  </div>
 
-                  {/* Terminal Output */}
-                  <CardContent className="flex-1 p-5 font-mono text-[13px] overflow-y-auto custom-scrollbar relative leading-relaxed">
-                    <div className="absolute inset-0 bg-gradient-to-b from-brand-500/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
-                    
-                    {logs.length === 0 ? (
-                      <div className="text-zinc-600 flex items-center gap-2">
-                        <span className="inline-block w-2 h-4 bg-zinc-600 animate-[typing-cursor_1s_infinite]" />
-                        <span>Waiting for connection...</span>
-                      </div>
-                    ) : (
-                      <div className="space-y-0.5">
-                        {logs.map((log, i) => (
-                          <motion.div 
-                            key={i}
-                            initial={{ opacity: 0, x: -8 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="text-zinc-300 break-words py-0.5 hover:bg-zinc-800/30 px-1 -mx-1 rounded transition-colors"
-                          >
-                            <span className="text-zinc-600 mr-3 select-none text-xs">
-                              {log.time}
-                            </span>
-                            {log.text}
-                          </motion.div>
-                        ))}
-                        <div ref={logsEndRef} />
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                    {/* Terminal Output */}
+                    <CardContent className="flex-1 p-5 font-mono text-[13px] overflow-y-auto custom-scrollbar relative leading-relaxed">
+                      <div className="absolute inset-0 bg-gradient-to-b from-brand-500/3 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-1000 pointer-events-none" />
+                      
+                      {logs.length === 0 ? (
+                        <div className="text-zinc-600 flex items-center gap-2">
+                          <span className="inline-block w-2 h-4 bg-zinc-600 animate-[typing-cursor_1s_infinite]" />
+                          <span>Waiting for connection...</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-0.5">
+                          {logs.map((log, i) => (
+                            <motion.div 
+                              key={i}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="text-zinc-300 break-words py-0.5 hover:bg-zinc-800/30 px-1 -mx-1 rounded transition-colors"
+                            >
+                              <span className="text-zinc-600 mr-3 select-none text-xs">
+                                {log.time}
+                              </span>
+                              {log.text}
+                            </motion.div>
+                          ))}
+                          <div ref={logsEndRef} />
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* AI Visualizer Card (40% width on md+) */}
+                <div className="md:col-span-5 h-full flex flex-col min-h-0">
+                  <AICoreVisualizer activeStepName={activeStepName} isComplete={isComplete} />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
