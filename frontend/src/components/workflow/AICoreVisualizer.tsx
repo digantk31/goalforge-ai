@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Cpu } from 'lucide-react'
+import { Sparkles, Cpu, Loader2 } from 'lucide-react'
 
 interface AICoreVisualizerProps {
   activeStepName: string | null
   isComplete: boolean
+  isSynthesizing?: boolean
 }
 
 interface Particle {
@@ -28,7 +29,7 @@ interface Pulse {
   color: string
 }
 
-export function AICoreVisualizer({ activeStepName, isComplete }: AICoreVisualizerProps) {
+export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = false }: AICoreVisualizerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const activeStepRef = useRef<string | null>(null)
 
@@ -184,6 +185,27 @@ export function AICoreVisualizer({ activeStepName, isComplete }: AICoreVisualize
 
       // 3. Draw and Update Particles
       particles.forEach((p) => {
+        // Apply gravitational pull / swirl effect during synthesis
+        if (isSynthesizing) {
+          const dx = centerX - p.x
+          const dy = centerY - p.y
+          const dist = Math.sqrt(dx * dx + dy * dy)
+          if (dist > 10) {
+            // Stronger pull close in, weak pull far away + spiral force
+            const pullForce = 0.06
+            const spiralForce = 0.04
+            p.vx += (dx / dist) * pullForce + (dy / dist) * spiralForce
+            p.vy += (dy / dist) * pullForce - (dx / dist) * spiralForce
+          }
+          
+          // Cap speeds during synthesis
+          const speed = Math.sqrt(p.vx * p.vx + p.vy * p.vy)
+          if (speed > 3.5) {
+            p.vx = (p.vx / speed) * 3.5
+            p.vy = (p.vy / speed) * 3.5
+          }
+        }
+
         // Move particle
         p.x += p.vx
         p.y += p.vy
@@ -210,7 +232,7 @@ export function AICoreVisualizer({ activeStepName, isComplete }: AICoreVisualize
       })
 
       // 4. Draw Rotating Quantum Core in Center
-      coreAngle += isComplete ? 0.005 : 0.015
+      coreAngle += isComplete ? 0.005 : isSynthesizing ? 0.075 : 0.015
 
       // Layer 1: Outermost glowing circle
       ctx.save()
@@ -246,7 +268,9 @@ export function AICoreVisualizer({ activeStepName, isComplete }: AICoreVisualize
       ctx.restore()
 
       // Layer 4: Solid glowing consciousness center orb
-      const coreSize = 10 + Math.sin(coreAngle * 3) * 1.5
+      const coreSize = isSynthesizing 
+        ? 13 + Math.sin(coreAngle * 4.5) * 3.0 
+        : 10 + Math.sin(coreAngle * 3) * 1.5
       const coreGrad = ctx.createRadialGradient(centerX, centerY, 1, centerX, centerY, coreSize)
       coreGrad.addColorStop(0, '#ffffff')
       coreGrad.addColorStop(0.3, '#c084fc') // Bright Purple
@@ -273,7 +297,7 @@ export function AICoreVisualizer({ activeStepName, isComplete }: AICoreVisualize
       window.removeEventListener('resize', handleResize)
       clearInterval(stepChecker)
     }
-  }, [activeStepName, isComplete])
+  }, [activeStepName, isComplete, isSynthesizing])
 
   return (
     <div className="relative w-full h-full min-h-[300px] rounded-xl overflow-hidden bg-[#0a0a0a] border border-zinc-800/40 flex flex-col items-center justify-center p-6">
@@ -293,7 +317,7 @@ export function AICoreVisualizer({ activeStepName, isComplete }: AICoreVisualize
         <div className="space-y-2 mt-auto">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeStepName || 'thinking'}
+              key={isSynthesizing ? 'synthesizing' : activeStepName || 'thinking'}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
@@ -301,15 +325,28 @@ export function AICoreVisualizer({ activeStepName, isComplete }: AICoreVisualize
               className="flex flex-col items-center gap-1"
             >
               <div className="inline-flex items-center gap-2 text-zinc-200 text-sm font-semibold tracking-wide">
-                <Sparkles className="w-4 h-4 text-brand-400 animate-spin-slow" />
-                {activeStepName ? (
-                  <span>Executing: <span className="text-brand-300">{activeStepName}</span></span>
+                {isSynthesizing ? (
+                  <span className="text-emerald-400 flex items-center gap-2">
+                    <Loader2 className="w-4.5 h-4.5 animate-spin" />
+                    Synthesizing AI Report...
+                  </span>
                 ) : (
-                  <span>Decomposing & Mapping...</span>
+                  <>
+                    <Sparkles className="w-4 h-4 text-brand-400 animate-spin-slow" />
+                    {activeStepName ? (
+                      <span>Executing: <span className="text-brand-300">{activeStepName}</span></span>
+                    ) : (
+                      <span>Decomposing & Mapping...</span>
+                    )}
+                  </>
                 )}
               </div>
               <p className="text-[11px] text-zinc-500 font-mono tracking-wider max-w-xs uppercase">
-                {activeStepName ? 'Streaming semantic logic gates' : 'Establishing multi-agent pipeline'}
+                {isSynthesizing 
+                  ? 'Compiling multi-agent report' 
+                  : activeStepName 
+                    ? 'Streaming semantic logic gates' 
+                    : 'Establishing multi-agent pipeline'}
               </p>
             </motion.div>
           </AnimatePresence>

@@ -674,7 +674,11 @@ export function WorkflowRunPage() {
 
                 {/* AI Visualizer Card (40% width on md+) */}
                 <div className="md:col-span-5 h-full flex flex-col min-h-0">
-                  <AICoreVisualizer activeStepName={activeStepName} isComplete={isComplete} />
+                  <AICoreVisualizer 
+                    activeStepName={activeStepName} 
+                    isComplete={isComplete} 
+                    isSynthesizing={steps.length > 0 && completedCount === steps.length && !finalReport}
+                  />
                 </div>
               </motion.div>
             )}
