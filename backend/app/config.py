@@ -4,6 +4,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "GoalForge API"
     MONGODB_URI: str = "mongodb://localhost:27017/goalforge"
     GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-flash-latest"
 
     class Config:
         env_file = ".env"

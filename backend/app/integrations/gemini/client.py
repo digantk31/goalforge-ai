@@ -22,7 +22,7 @@ class GeminiClient:
 
     def __init__(self):
         self.client = genai.Client(api_key=API_KEY)
-        self.model_id = "gemini-flash-latest"
+        self.model_id = settings.GEMINI_MODEL
 
     def _retry_on_rate_limit(self, func, *args, **kwargs):
         """Retry a function call with exponential backoff on 429 errors."""
