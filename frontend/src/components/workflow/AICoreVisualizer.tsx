@@ -136,22 +136,26 @@ export function AICoreVisualizer({ activeStepName, isComplete, isSynthesizing = 
       ctx.lineWidth = 1
       ctx.setLineDash([0])
       
+      const dynamicRadius = isSynthesizing 
+        ? Math.max(340, Math.min(width, height) * 0.38) 
+        : 110
+      
       ctx.beginPath()
-      ctx.arc(centerX, centerY, 80, 0, Math.PI * 2)
+      ctx.arc(centerX, centerY, dynamicRadius * 0.5, 0, Math.PI * 2)
       ctx.stroke()
       
       ctx.strokeStyle = 'rgba(16, 185, 129, 0.04)'
       ctx.beginPath()
-      ctx.arc(centerX, centerY, 160, 0, Math.PI * 2)
+      ctx.arc(centerX, centerY, dynamicRadius, 0, Math.PI * 2)
       ctx.stroke()
 
       // 3. Update & Position Agent Nodes in a Beautiful Orbit
       agents.forEach((agent, index) => {
-        // Orbit calculation with gentle floating bobbing
+        // Orbit calculation with gentle floating bobbing and dynamic responsive radius
         const currentAngle = agent.angle + coreAngle * 0.5
         const bob = Math.sin(coreAngle * 3 + index) * 6
-        agent.x = centerX + Math.cos(currentAngle) * agent.radius
-        agent.y = centerY + Math.sin(currentAngle) * agent.radius + bob
+        agent.x = centerX + Math.cos(currentAngle) * dynamicRadius
+        agent.y = centerY + Math.sin(currentAngle) * dynamicRadius + bob
 
         // Pulse logic
         agent.pulse += 0.015 * agent.pulseDir
