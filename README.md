@@ -29,46 +29,52 @@
 
 Here is a visual tour of the live GoalForge AI experience, featuring a Vercel-style glassmorphic design system, high-fidelity real-time telemetry, and a JetBrains Mono terminal log:
 
-### 1. Premium Dark-First Dashboard
+### 1. High-Tech Synaptic Starting Loader
+The ultra-premium entry portal featuring an HTML5 Canvas neural network, dynamically curving and snapping Bezier pipelines, orbiting gravitational core nodes, and a neon cyber-progress loading bar.
+<p align="center">
+  <img src="docs/images/01_Start.png" width="850" alt="GoalForge Starting Loader" />
+</p>
+
+### 2. Premium Dark-First Dashboard
 The central command hub displaying active/completed workflows, live activity charts, and **One-Click Demo Presets** for easy judge execution.
 <p align="center">
-  <img src="docs/images/dashboard.png" width="850" alt="GoalForge Dashboard" />
+  <img src="docs/images/02_Dashboard.png" width="850" alt="GoalForge Dashboard" />
 </p>
 
-### 2. Autonomous Goal Planner
+### 3. Autonomous Goal Planner
 Decompose any natural language goal with customizable priorities, tags, and quick-suggestions.
 <p align="center">
-  <img src="docs/images/new_goal.png" width="850" alt="GoalForge Goal Planner" />
+  <img src="docs/images/03_New_Goal.png" width="850" alt="GoalForge Goal Planner" />
 </p>
 
-### 3. Real-Time Telemetry & Bouncing Statuses (Running)
+### 4. Real-Time Telemetry & Blinking Statuses (Running)
 Live Event Stream (SSE) showing running agent states in purple, blinking dots, and **Fake Tool Execution Logs** (invoking Google Search, MongoDB MCP connection, etc.).
 <p align="center">
-  <img src="docs/images/workflow_running.png" width="850" alt="GoalForge Workflow Running" />
+  <img src="docs/images/04_Workflow_Running.png" width="850" alt="GoalForge Workflow Running" />
 </p>
 
-### 4. Fully Completed Checklist (100% Complete)
-The entire workflow timeline successfully completed and filled in emerald, with progress bar at 100%.
+### 5. Mid-Execution Split View
+The detailed split-screen layout showing progress logs and immediate responses from active subprocess tasks.
 <p align="center">
-  <img src="docs/images/workflow_completed.png" width="850" alt="GoalForge Workflow Completed" />
+  <img src="docs/images/05_Workflow_Execution.png" width="850" alt="GoalForge Split-Execution View" />
 </p>
 
-### 5. AI-Generated Report Synthesis
-A pristine view showing final report compilation in markdown format, with options to re-run, export, or copy contents.
+### 6. Fully Completed Checklist & AI Synthesis Report
+The entire workflow successfully completed and filled in emerald, featuring the compiled, exportable React Markdown report with re-run actions.
 <p align="center">
-  <img src="docs/images/workflow_execution.png" width="850" alt="GoalForge Execution Report" />
+  <img src="docs/images/06_Workflow_Completed.png" width="850" alt="GoalForge Workflow Completed" />
 </p>
 
-### 6. Interactive History Log
-Review all past autonomous workflows with clean search filters and priority indicators.
+### 7. Interactive History Log
+Review all past autonomous workflows with clean status filtering and real-time case-insensitive search index.
 <p align="center">
-  <img src="docs/images/history.png" width="850" alt="GoalForge History Log" />
+  <img src="docs/images/07_History.png" width="850" alt="GoalForge History Log" />
 </p>
 
-### 7. Secure API Settings Hub
+### 8. Secure API Settings Hub
 Connect, configure, and manage your credentials under TLS security, complete with toggleable input masks.
 <p align="center">
-  <img src="docs/images/settings.png" width="850" alt="GoalForge Settings" />
+  <img src="docs/images/08_Settings.png" width="850" alt="GoalForge Settings" />
 </p>
 
 ---
