@@ -15,7 +15,6 @@
 
 <p align="center">
   <a href="https://goalforge-ai.vercel.app"><strong>🔗 Live Frontend Demo (Vercel)</strong></a> &nbsp;•&nbsp; 
-  <a href="https://goalforge-backend-xbwc534m6w-uc.a.run.app/docs"><strong>⚙️ Backend API Docs (Cloud Run)</strong></a> &nbsp;•&nbsp;
   <a href="https://github.com/digantk31/goalforge-ai"><strong>💻 GitHub Codebase</strong></a>
 </p>
 
