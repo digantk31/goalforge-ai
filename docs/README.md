@@ -51,5 +51,6 @@ Below is the catalog of visual assets mapped to the corresponding step in the au
 
 ## 🎥 Demonstration Video
 
-*   **Location:** [`docs/video/GoalForge AI.mp4`](file:///d:/Hackathon/Google%20Cloud%20Rapid%20Agent%20Hackathon/goalforge-ai/docs/video/GoalForge%20AI.mp4)
+*   **YouTube Link:** [🎬 GoalForge AI Demonstration Video (YouTube)](https://youtu.be/s8X2LAyr5RE)
+*   **Local Backup:** [`docs/video/GoalForge AI.mp4`](file:///d:/Hackathon/Google%20Cloud%20Rapid%20Agent%20Hackathon/goalforge-ai/docs/video/GoalForge%20AI.mp4)
 *   **Format:** H.264 encoded MP4, high-definition 1080p, featuring complete voiceover explanation and end-to-end interface walkthrough.
